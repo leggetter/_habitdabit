@@ -11,6 +11,7 @@ declare namespace NodeJS {
     GOOGLE_ID: string
     GOOGLE_SECRET: string
     AUTH0_ID: string
-    AUTH0_SECRET: string
+    AUTH0_SECRET: string,
+    ADMIN_EMAILS: string,
   }
 }

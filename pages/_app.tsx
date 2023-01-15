@@ -1,8 +1,12 @@
-import { SessionProvider } from "next-auth/react"
-import "./styles.css"
+import { ChakraProvider } from "@chakra-ui/react";
 
-import type { AppProps } from "next/app"
-import type { Session } from "next-auth"
+import { SessionProvider } from "next-auth/react";
+import "./styles.css";
+
+import type { AppProps } from "next/app";
+import type { Session } from "next-auth";
+
+import theme from "../lib/theme";
 
 // Use of the <SessionProvider> is mandatory to allow components that call
 // `useSession()` anywhere in your application to access the `session` object.
@@ -12,7 +16,9 @@ export default function App({
 }: AppProps<{ session: Session }>) {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <ChakraProvider theme={theme}>
+        <Component {...pageProps} />
+      </ChakraProvider>
     </SessionProvider>
-  )
+  );
 }

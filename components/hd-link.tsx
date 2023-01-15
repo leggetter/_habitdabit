@@ -1,7 +1,7 @@
 import NextLink from "next/link";
 import { Link, LinkProps } from "@chakra-ui/react";
 
-declare type HDLinkProps = LinkProps & {
+export declare type HDLinkProps = LinkProps & {
   children?: React.ReactNode;
 };
 

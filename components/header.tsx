@@ -23,10 +23,9 @@ export default function Header() {
           }`}
         >
           {!session && (
-            <>
-              <span className={styles.notSignedInText}>
-                You are not signed in
-              </span>
+            <Flex>
+              <Box>You are not signed in</Box>
+              <Spacer />
               <a
                 href={`/api/auth/signin`}
                 className={styles.buttonPrimary}
@@ -37,7 +36,7 @@ export default function Header() {
               >
                 Sign in
               </a>
-            </>
+            </Flex>
           )}
           {session?.user && (
             <Flex>

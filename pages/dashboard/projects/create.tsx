@@ -14,13 +14,7 @@ import { useSession } from "next-auth/react";
 import AccessDenied from "../../../components/access-denied";
 import Layout from "../../../components/layout";
 import { Field, Form, Formik, FormikHelpers } from "formik";
-
-interface CreateProjectValues {
-  name: string;
-  goal: string;
-  owner: string;
-  champion: string;
-}
+import { CreateProjectValues } from "../../../lib/project-helpers";
 
 export default function CreateProject() {
   const { data: session } = useSession();

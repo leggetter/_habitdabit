@@ -4,6 +4,10 @@ import { createRouter, expressWrapper } from "next-connect";
 
 import { unstable_getServerSession } from "next-auth"
 import { authOptions } from "../auth/[...nextauth]"
+import { tigrisDb } from "../../../lib/tigris";
+import { Project } from "../../../db/models/project";
+import { User } from "../../../db/models/user";
+import { CreateProjectValues } from "../../../lib/project-helpers";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
@@ -27,7 +31,52 @@ router
     res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
   })
   .post("/api/v1/projects", async (req, res) => {
-    console.log(req.body)
+    const session = await unstable_getServerSession(req, res, authOptions)
+    const projectCreationRequest = req.body as CreateProjectValues;
+
+    if (projectCreationRequest.owner !== session?.user.email) {
+      res.status(403).json({ error: "The provided owner email does not match the current logged in user" });
+      return;
+    }
+
+    try {
+      const users = tigrisDb.getCollection<User>("users");
+
+      const owner = await users.findOne({ filter: { email: projectCreationRequest.owner } });
+      if (!owner) {
+        // This should never happen as the user should be created at signup
+        // TODO: create user at signup
+        res.status(404).json({ error: "The owner could not be found." });
+        return
+      }
+
+      const champion = await users.findOne({ filter: { email: projectCreationRequest.champion } });
+      if (!champion) {
+        // TODO: should the champion be created if they don't exist? Probably!
+        res.status(404).json({ error: "The champion could not be found." });
+        return
+      }
+
+      const creationDate = new Date();
+      const projects = tigrisDb.getCollection<Project>("projects");
+      const insertedProject = projects.insertOne({
+        name: projectCreationRequest.name,
+        champion: champion,
+        goalDescription: projectCreationRequest.goal,
+        owner: owner,
+        admins: [owner],
+        createdAt: creationDate, // TODO: find out why this isn't auto applied
+        startDate: creationDate,
+      });
+
+      res.status(201).json(insertedProject)
+    }
+    catch (ex) {
+      console.error(ex)
+
+      res.status(500).json({ error: "unexpected server error" });
+    }
+
     // use async/await
     res.json({ text: "this should create a new project for ther user. Yipee!" });
   });

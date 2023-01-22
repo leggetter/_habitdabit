@@ -46,14 +46,23 @@ export default function CreateProject() {
               owner: session.user.email,
               champion: "",
             }}
-            onSubmit={(
+            onSubmit={async (
               values: CreateProjectValues,
               { setSubmitting }: FormikHelpers<CreateProjectValues>
             ) => {
-              setTimeout(() => {
-                alert(JSON.stringify(values, null, 2));
-                setSubmitting(false);
-              }, 500);
+              const params: RequestInit = {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify(values),
+              };
+
+              const response = await fetch("/api/v1/projects", params);
+              const body = await response.json();
+
+              alert(JSON.stringify(body, null, 2));
+              setSubmitting(false);
             }}
           >
             <Form>

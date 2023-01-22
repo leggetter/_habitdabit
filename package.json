@@ -6,9 +6,11 @@
     "url": "https://github.com/leggetter/habitdabit/issues"
   },
   "scripts": {
+    "predev": "npm run setup",
     "dev": "next",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "setup": "npx ts-node scripts/setup.ts"
   },
   "author": "Phil Leggetter <phil@leggetter.co.uk>",
   "contributors": [],
@@ -16,6 +18,7 @@
     "@chakra-ui/react": "^2.4.8",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@tigrisdata/core": "^1.0.0-beta.29",
     "formik": "^2.2.9",
     "framer-motion": "^6.5.1",
     "next": "latest",
@@ -23,7 +26,8 @@
     "next-connect": "^1.0.0-next.3",
     "nodemailer": "^6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
     "@types/node": "^17",

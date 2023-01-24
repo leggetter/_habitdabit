@@ -3,7 +3,7 @@ import { Field, PrimaryKey, TigrisCollection, TigrisDataTypes } from "@tigrisdat
 @TigrisCollection("users")
 export class User {
   @PrimaryKey(TigrisDataTypes.INT32, { order: 1, autoGenerate: true })
-  id!: number;
+  id?: number;
 
   @Field()
   name!: string;
@@ -11,6 +11,6 @@ export class User {
   @Field()
   email!: string;
 
-  @Field({ timestamp: "createdAt" })
+  @Field(TigrisDataTypes.DATE_TIME, { timestamp: "createdAt" })
   createdAt!: Date;
 }

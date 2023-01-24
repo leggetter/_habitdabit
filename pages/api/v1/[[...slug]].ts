@@ -1,6 +1,6 @@
 // pages/api/hello.js
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createRouter, expressWrapper } from "next-connect";
+import { createRouter } from "next-connect";
 
 import { unstable_getServerSession } from "next-auth"
 import { authOptions } from "../auth/[...nextauth]"
@@ -42,30 +42,50 @@ router
     try {
       const users = tigrisDb.getCollection<User>("users");
 
-      const owner = await users.findOne({ filter: { email: projectCreationRequest.owner } });
+      let owner = await users.findOne({ filter: { email: projectCreationRequest.owner } });
       if (!owner) {
+        owner = await users.insertOne({
+          name: session.user.name || "",
+          email: session.user.email,
+          createdAt: new Date(),
+        });
+
+        console.log("New user created for owner", owner);
+
         // This should never happen as the user should be created at signup
         // TODO: create user at signup
-        res.status(404).json({ error: "The owner could not be found." });
-        return
+        // res.status(404).json({ error: "The owner could not be found." });
+        // return
+      }
+      else {
+        console.log("Owner already exists.", owner);
       }
 
-      const champion = await users.findOne({ filter: { email: projectCreationRequest.champion } });
+      let champion = await users.findOne({ filter: { email: projectCreationRequest.champion } });
       if (!champion) {
+
+        champion = await users.insertOne({
+          name: "",
+          email: projectCreationRequest.champion,
+          createdAt: new Date(),
+        });
+
+        console.log("New user created for owner", champion);
         // TODO: should the champion be created if they don't exist? Probably!
-        res.status(404).json({ error: "The champion could not be found." });
-        return
+        // res.status(404).json({ error: "The champion could not be found." });
+      }
+      else {
+        console.log('Champion already exists.', champion)
       }
 
       const creationDate = new Date();
       const projects = tigrisDb.getCollection<Project>("projects");
-      const insertedProject = projects.insertOne({
+      const insertedProject = await projects.insertOne({
         name: projectCreationRequest.name,
-        champion: champion,
+        championId: champion.id!,
         goalDescription: projectCreationRequest.goal,
-        owner: owner,
-        admins: [owner],
-        createdAt: creationDate, // TODO: find out why this isn't auto applied
+        ownerId: owner.id!,
+        adminIds: [owner.id!],
         startDate: creationDate,
       });
 
@@ -76,9 +96,6 @@ router
 
       res.status(500).json({ error: "unexpected server error" });
     }
-
-    // use async/await
-    res.json({ text: "this should create a new project for ther user. Yipee!" });
   });
 
 export default router.handler({

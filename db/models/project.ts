@@ -12,18 +12,18 @@ export class Project {
   @Field({ maxLength: 128, })
   goalDescription!: string;
 
-  @Field()
-  owner!: User;
+  @Field(TigrisDataTypes.INT32)
+  ownerId!: number;
 
-  @Field(TigrisDataTypes.ARRAY, { elements: User })
-  admins: Array<User> = new Array<User>();
+  @Field(TigrisDataTypes.ARRAY, { elements: TigrisDataTypes.INT32 })
+  adminIds: Array<Number> = new Array<Number>();
 
-  @Field()
-  champion!: User;
+  @Field(TigrisDataTypes.INT32)
+  championId!: number;
 
-  @Field({ timestamp: "createdAt" })
-  createdAt!: Date;
+  @Field(TigrisDataTypes.DATE_TIME, { timestamp: "createdAt" })
+  createdAt?: Date;
 
-  @Field()
+  @Field(TigrisDataTypes.DATE_TIME)
   startDate!: Date;
 }

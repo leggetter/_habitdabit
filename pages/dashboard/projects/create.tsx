@@ -15,9 +15,12 @@ import AccessDenied from "../../../components/access-denied";
 import Layout from "../../../components/layout";
 import { Field, Form, Formik, FormikHelpers } from "formik";
 import { CreateProjectValues } from "../../../lib/project-helpers";
+import { useRouter } from "next/router";
+import { Project } from "../../../db/models/project";
 
 export default function CreateProject() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   if (!session) {
     return (
@@ -53,10 +56,11 @@ export default function CreateProject() {
               };
 
               const response = await fetch("/api/v1/projects", params);
-              const body = await response.json();
+              const body = (await response.json()) as Project;
 
-              alert(JSON.stringify(body, null, 2));
               setSubmitting(false);
+
+              router.push(`/dashboard/projects/${body.id}`);
             }}
           >
             <Form>

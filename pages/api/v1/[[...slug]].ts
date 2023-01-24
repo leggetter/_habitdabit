@@ -16,7 +16,7 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router
   .use(async (req, res, next) => {
     const session = await unstable_getServerSession(req, res, authOptions)
-    console.log('session', session);
+    // console.log('session', session);
     if (!session) {
       res.status(401).end();
       return;
@@ -29,6 +29,30 @@ router
   })
   .get("/api/v1/projects", (req, res) => {
     res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
+  })
+  .get("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
+    // TODO: ensure that the current session user has permission to view the project
+    // 1. owner 2. champion 3. an admin
+
+    try {
+      const { slug } = req.query
+      const id = parseInt(slug![1] as string) as number;
+
+      const projects = tigrisDb.getCollection<Project>("projects");
+      const project = await projects.findOne({ filter: { id: id } });
+
+      if (project) {
+        // TODO: get the owner and admins for the project
+        res.status(200).json(project);
+      }
+      else {
+        res.status(404).json({ error: `Project with id "${id}" not found` });
+      }
+    }
+    catch (ex) {
+      console.error(ex)
+      res.status(500).json({ error: "Unexpected server error in /api/va/project/[id]" })
+    }
   })
   .post("/api/v1/projects", async (req, res) => {
     const session = await unstable_getServerSession(req, res, authOptions)
@@ -100,6 +124,7 @@ router
 
 export default router.handler({
   onError: (err, req, res) => {
+    console.error(err);
     res.status(500).end("Something broke!");
   },
   onNoMatch: (req, res) => {

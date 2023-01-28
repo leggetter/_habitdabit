@@ -69,4 +69,4 @@ An example `.env.development.local` is in the repo called `.env.development.loca
 
 Please do get involved!
 
-Take a look at the [issues][/issues] to see what is planned for HabitDabit or to ask a question.
+Take a look at the [issues](/issues) to see what is planned for HabitDabit or to ask a question.

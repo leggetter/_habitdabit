@@ -38,7 +38,7 @@ router
       const { slug } = req.query
       const id = parseInt(slug![1] as string) as number;
 
-      const projects = tigrisDb.getCollection<Project>("projects");
+      const projects = tigrisDb.getCollection<Project>(Project);
       const project = await projects.findOne({ filter: { id: id } });
 
       if (project) {

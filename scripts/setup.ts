@@ -1,5 +1,5 @@
 import { loadEnvConfig } from "@next/env";
-loadEnvConfig(process.cwd());
+loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production")
 
 import { tigrisClient } from "../lib/tigris";
 

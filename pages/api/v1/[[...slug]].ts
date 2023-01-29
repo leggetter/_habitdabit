@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 
-import { unstable_getServerSession } from "next-auth"
+import { getServerSession } from "next-auth"
 import { authOptions } from "../auth/[...nextauth]"
 import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
@@ -15,7 +15,7 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
   .use(async (req, res, next) => {
-    const session = await unstable_getServerSession(req, res, authOptions)
+    const session = await getServerSession(req, res, authOptions)
     // console.log('session', session);
     if (!session) {
       res.status(401).end();
@@ -55,7 +55,7 @@ router
     }
   })
   .post("/api/v1/projects", async (req, res) => {
-    const session = await unstable_getServerSession(req, res, authOptions)
+    const session = await getServerSession(req, res, authOptions)
     const projectCreationRequest = req.body as ProjectFormValues;
 
     if (projectCreationRequest.owner !== session?.user.email) {

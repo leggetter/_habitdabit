@@ -7,7 +7,7 @@ import { authOptions } from "../auth/[...nextauth]"
 import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
-import { CreateProjectValues } from "../../../lib/project-helpers";
+import { ProjectFormValues } from "../../../lib/project-helpers";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
@@ -56,7 +56,7 @@ router
   })
   .post("/api/v1/projects", async (req, res) => {
     const session = await unstable_getServerSession(req, res, authOptions)
-    const projectCreationRequest = req.body as CreateProjectValues;
+    const projectCreationRequest = req.body as ProjectFormValues;
 
     if (projectCreationRequest.owner !== session?.user.email) {
       res.status(403).json({ error: "The provided owner email does not match the current logged in user" });

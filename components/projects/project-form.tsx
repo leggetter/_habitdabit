@@ -15,12 +15,14 @@ import { ProjectValues } from "../../lib/project-helpers";
 
 interface ProjectFormProps {
   action: string;
+  method: "POST" | "PATCH";
   project?: ProjectValues;
   onSubmitComplete: (project: Project) => void;
 }
 
 export default function ProjectForm({
   action,
+  method,
   project,
   onSubmitComplete,
 }: ProjectFormProps) {
@@ -39,7 +41,7 @@ export default function ProjectForm({
               headers: {
                 "Content-Type": "application/json",
               },
-              method: "POST",
+              method: method,
               body: JSON.stringify(values),
             };
 

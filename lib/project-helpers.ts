@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Project } from "../db/models/project";
 
 export class ProjectValues {
+  public id?: number;
   public name: string = "";
   public goal: string = "";
   public owner: string = "";

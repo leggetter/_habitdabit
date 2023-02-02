@@ -30,6 +30,27 @@ router
   .get("/api/v1/projects", (req, res) => {
     res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
   })
+  .patch("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
+    try {
+      const { slug } = req.query
+      console.log(req.query);
+      const id = parseInt(slug![1] as string) as number;
+
+      const projects = tigrisDb.getCollection<Project>(Project);
+      const project = await projects.findOne({ filter: { id: id } });
+
+      if (!project) {
+        res.status(404).json({ error: `A project with id "${id}" could not be found.` });
+      }
+      else {
+        res.status(200).json(project!);
+      }
+    }
+    catch (ex) {
+      console.error(ex)
+      res.status(500).json({ error: "Unexpected server error in PATCH /api/va/project/[id]" })
+    }
+  })
   .get("/api/v1/projects/:id", async (req, res: NextApiResponse<ProjectValues | { error: string }>) => {
     // TODO: ensure that the current session user has permission to view the project
     // 1. owner 2. champion 3. an admin
@@ -43,7 +64,7 @@ router
 
       if (project) {
         // TODO: get the owner, champion, and admins for the project
-        const projectValues = new ProjectValues({goal: project.goalDescription, name: project.name});
+        const projectValues = new ProjectValues({ id: project.id, goal: project.goalDescription, name: project.name });
 
         const users = tigrisDb.getCollection<User>(User);
         const champion = await users.findOne({ filter: { id: project.championId } });
@@ -67,7 +88,7 @@ router
     }
     catch (ex) {
       console.error(ex)
-      res.status(500).json({ error: "Unexpected server error in /api/va/project/[id]" })
+      res.status(500).json({ error: "Unexpected server error in POST /api/va/project/[id]" })
     }
   })
   .post("/api/v1/projects", async (req, res) => {

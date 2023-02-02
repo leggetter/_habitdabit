@@ -28,6 +28,7 @@ export default function CreateProject() {
       <Heading as="h1">Create Project</Heading>
 
       <ProjectForm
+        method="POST"
         action="/api/v1/projects"
         project={new ProjectValues({ owner: session.user.email })}
         onSubmitComplete={handleSubmissionComplete}

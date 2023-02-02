@@ -5,7 +5,7 @@ import Layout from "../../../components/layout";
 import { useRouter } from "next/router";
 import ProjectForm from "../../../components/projects/project-form";
 import { Project } from "../../../db/models/project";
-import { ProjectFormValues } from "../../../lib/project-helpers";
+import { ProjectValues } from "../../../lib/project-helpers";
 
 export default function CreateProject() {
   const { data: session } = useSession();
@@ -29,7 +29,7 @@ export default function CreateProject() {
 
       <ProjectForm
         action="/api/v1/projects"
-        project={new ProjectFormValues({ owner: session.user.email })}
+        project={new ProjectValues({ owner: session.user.email })}
         onSubmitComplete={handleSubmissionComplete}
       />
     </Layout>

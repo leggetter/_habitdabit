@@ -11,16 +11,20 @@ import {
 } from "@chakra-ui/react";
 import { Field, Form, Formik, FormikHelpers } from "formik";
 import { Project } from "../../db/models/project";
-import { ProjectFormValues } from "../../lib/project-helpers";
+import { ProjectValues } from "../../lib/project-helpers";
 
 interface ProjectFormProps {
   action: string;
-  project?: ProjectFormValues;
+  project?: ProjectValues;
   onSubmitComplete: (project: Project) => void;
 }
 
-export default function ProjectForm({ action, project }: ProjectFormProps) {
-  const projectValues = project ?? new ProjectFormValues();
+export default function ProjectForm({
+  action,
+  project,
+  onSubmitComplete,
+}: ProjectFormProps) {
+  const projectValues = project ?? new ProjectValues();
 
   return (
     <Box as="section" mt={10}>
@@ -28,8 +32,8 @@ export default function ProjectForm({ action, project }: ProjectFormProps) {
         <Formik
           initialValues={projectValues}
           onSubmit={async (
-            values: ProjectFormValues,
-            { setSubmitting }: FormikHelpers<ProjectFormValues>
+            values: ProjectValues,
+            { setSubmitting }: FormikHelpers<ProjectValues>
           ) => {
             const params: RequestInit = {
               headers: {
@@ -43,6 +47,8 @@ export default function ProjectForm({ action, project }: ProjectFormProps) {
             const body = (await response.json()) as Project;
 
             setSubmitting(false);
+
+            onSubmitComplete(body);
           }}
         >
           <Form>

@@ -7,7 +7,7 @@ import { authOptions } from "../auth/[...nextauth]"
 import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
-import { ProjectFormValues } from "../../../lib/project-helpers";
+import { ProjectValues } from "../../../lib/project-helpers";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
@@ -30,7 +30,7 @@ router
   .get("/api/v1/projects", (req, res) => {
     res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
   })
-  .get("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
+  .get("/api/v1/projects/:id", async (req, res: NextApiResponse<ProjectValues | { error: string }>) => {
     // TODO: ensure that the current session user has permission to view the project
     // 1. owner 2. champion 3. an admin
 
@@ -42,8 +42,24 @@ router
       const project = await projects.findOne({ filter: { id: id } });
 
       if (project) {
-        // TODO: get the owner and admins for the project
-        res.status(200).json(project);
+        // TODO: get the owner, champion, and admins for the project
+        const projectValues = new ProjectValues({goal: project.goalDescription, name: project.name});
+
+        const users = tigrisDb.getCollection<User>(User);
+        const champion = await users.findOne({ filter: { id: project.championId } });
+        const owner = await users.findOne({ filter: { id: project.ownerId } });
+        const adminsEmails: string[] = [];
+        for await (const adminId of project.adminIds) {
+          const admin = await users.findOne({ filter: { id: adminId } });
+          adminsEmails.push(admin?.email as string)
+        }
+
+        projectValues.champion = champion?.email as string;
+        projectValues.owner = owner?.email as string;
+        projectValues.adminEmails = adminsEmails;
+
+        console.log("projectValues", projectValues);
+        res.status(200).json(projectValues);
       }
       else {
         res.status(404).json({ error: `Project with id "${id}" not found` });
@@ -56,7 +72,7 @@ router
   })
   .post("/api/v1/projects", async (req, res) => {
     const session = await getServerSession(req, res, authOptions)
-    const projectCreationRequest = req.body as ProjectFormValues;
+    const projectCreationRequest = req.body as ProjectValues;
 
     if (projectCreationRequest.owner !== session?.user.email) {
       res.status(403).json({ error: "The provided owner email does not match the current logged in user" });

@@ -3,11 +3,9 @@ import { useRouter } from "next/router";
 import Layout from "../../../../components/layout";
 
 import { Table, Tbody, Tr, Td, TableContainer } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { Project } from "../../../../db/models/project";
-import { useProject } from "../../../../lib/project-helpers";
+import { ProjectValues, useProject } from "../../../../lib/project-helpers";
 
-const ProjectTable = ({ project }: { project: Project }) => {
+const ProjectTable = ({ project }: { project: ProjectValues }) => {
   return (
     <>
       <Heading>Project: {project?.name}</Heading>
@@ -19,23 +17,27 @@ const ProjectTable = ({ project }: { project: Project }) => {
               <Td>
                 <b>Goal</b>
               </Td>
-              <Td>{project?.goalDescription}</Td>
+              <Td>{project?.goal}</Td>
             </Tr>
             <Tr>
               <Td>
                 <b>Champion</b>
               </Td>
-              <Td>{project?.championId}</Td>
+              <Td>{project?.champion}</Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Owner</b>
+              </Td>
+              <Td>{project?.owner}</Td>
             </Tr>
             <Tr>
               <Td>
                 <b>Admins</b>
               </Td>
               <Td>
-                {project?.adminIds.map((adminId) => {
-                  return (
-                    <span key={adminId.toString()}>{adminId.toString()}</span>
-                  );
+                {project?.adminEmails.map((email) => {
+                  return <span key={email}>{email}</span>;
                 })}
               </Td>
             </Tr>

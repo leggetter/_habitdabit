@@ -19,6 +19,7 @@
     "@chakra-ui/react": "^2.4.8",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@next/env": "^13.1.6",
     "@tigrisdata/core": "^1.0.0-beta.29",
     "formik": "^2.2.9",
     "framer-motion": "^6.5.1",

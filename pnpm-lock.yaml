@@ -31,7 +31,7 @@ dependencies:
   formik: 2.2.9_react@18.2.0
   framer-motion: 6.5.1_biqbaboplfbrettd7655fr4n2y
   next: 13.1.6_biqbaboplfbrettd7655fr4n2y
-  next-auth: 4.19.0_td4a24gfix6mj6cdavvzw6ta4u
+  next-auth: 4.19.2_td4a24gfix6mj6cdavvzw6ta4u
   next-connect: 1.0.0-next.3
   nodemailer: 6.9.0
   react: 18.2.0
@@ -2077,8 +2077,8 @@ packages:
     hasBin: true
     dev: false
 
-  /next-auth/4.19.0_td4a24gfix6mj6cdavvzw6ta4u:
-    resolution: {integrity: sha512-56Pc/Ni0cxfrVDAz2KeWdj+VXvABbHF1grgFR4+ktXbRmKQOiMU9uyMwhasBQkbL+pRrWujO0Ib/bwkP0oZS4g==}
+  /next-auth/4.19.2_td4a24gfix6mj6cdavvzw6ta4u:
+    resolution: {integrity: sha512-6V2YG3IJQVhgCAH7mvT3yopTW92gMdUrcwGX7NQ0dCreT/+axGua/JmVdarjec0C/oJukKpIYRgjMlV+L5ZQOQ==}
     peerDependencies:
       next: ^12.2.5 || ^13
       nodemailer: ^6.6.5

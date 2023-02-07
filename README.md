@@ -67,6 +67,8 @@ An example `.env.development.local` is in the repo called `.env.development.loca
 
 ## Contribute 🙌
 
-Please do get involved!
+Please do get involved! To start off with we're building a simple MVP:
+
+![HabitDabit sitemap](./docs/habit-dabit-sitemap.jpg)
 
 Take a look at the [issues](https://github.com/leggetter/habitdabit/issues) to see what is planned for HabitDabit or to ask a question.

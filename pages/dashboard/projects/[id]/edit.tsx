@@ -29,6 +29,7 @@ export default function PostPage() {
             action={`/api/v1/projects/${project.id}`}
             project={project}
             onSubmitComplete={handleSubmissionComplete}
+            championReadonly={true}
           />
         </>
       )}

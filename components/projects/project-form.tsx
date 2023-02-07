@@ -18,6 +18,7 @@ interface ProjectFormProps {
   method: "POST" | "PATCH";
   project?: ProjectValues;
   onSubmitComplete: (project: Project) => void;
+  championReadonly?: boolean;
 }
 
 export default function ProjectForm({
@@ -25,6 +26,7 @@ export default function ProjectForm({
   method,
   project,
   onSubmitComplete,
+  championReadonly = false,
 }: ProjectFormProps) {
   const projectValues = project ?? new ProjectValues();
 
@@ -45,12 +47,16 @@ export default function ProjectForm({
               body: JSON.stringify(values),
             };
 
-            const response = await fetch(action, params);
-            const body = (await response.json()) as Project;
+            try {
+              const response = await fetch(action, params);
+              const body = (await response.json()) as Project;
+              onSubmitComplete(body);
+            } catch (err) {
+              // TODO: have some form-level errors
+              console.error(err);
+            }
 
             setSubmitting(false);
-
-            onSubmitComplete(body);
           }}
         >
           <Form>
@@ -88,7 +94,12 @@ export default function ProjectForm({
 
             <Field id="champion" name="champion">
               {({ field, form }: { field: any; form: any }) => (
-                <FormControl id="champion" isRequired mb={5}>
+                <FormControl
+                  id="champion"
+                  isRequired
+                  isReadOnly={championReadonly}
+                  mb={5}
+                >
                   <FormLabel>Champion</FormLabel>
                   <Input {...field} type="email" />
                   <FormErrorMessage>{form.errors.champion}</FormErrorMessage>

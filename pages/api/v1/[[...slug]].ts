@@ -8,6 +8,7 @@ import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
 import { ProjectValues } from "../../../lib/project-helpers";
+import { Status } from "@tigrisdata/core";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
@@ -31,6 +32,8 @@ router
     res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
   })
   .patch("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
+    // TODO: ensure permissions to edit Project
+
     try {
       const { slug } = req.query
       console.log(req.query);
@@ -43,7 +46,25 @@ router
         res.status(404).json({ error: `A project with id "${id}" could not be found.` });
       }
       else {
-        res.status(200).json(project!);
+        // You cannot edit the owner or champion (for now)
+        // so those values are not being changed
+        const projectUpdateRequest = req.body as ProjectValues;
+        const result = await projects.updateOne({
+          filter: {
+            id: project.id,
+          },
+          fields: {
+            name: projectUpdateRequest.name,
+            goalDescription: projectUpdateRequest.goal,
+          }
+        });
+
+        if (result.status === Status.Updated) {
+          res.status(200).json(project);
+        }
+        else {
+          res.status(500).json({ error: "Project update request did not result in an updated status." })
+        }
       }
     }
     catch (ex) {

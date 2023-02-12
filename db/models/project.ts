@@ -15,7 +15,7 @@ export class Project {
   ownerId!: number;
 
   @Field(TigrisDataTypes.ARRAY, { elements: TigrisDataTypes.INT32 })
-  adminIds: Array<number> = new Array<number>();
+  adminIds!: Array<number>;
 
   @Field(TigrisDataTypes.INT32)
   championId!: number;

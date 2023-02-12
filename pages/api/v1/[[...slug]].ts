@@ -8,11 +8,11 @@ import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
 import { ProjectValues } from "../../../lib/project-helpers";
-import { Status } from "@tigrisdata/core";
+import { FindQuery, LogicalOperator, Status } from "@tigrisdata/core";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
-const router = createRouter<NextApiRequest, NextApiResponse>();
+const router = createRouter<NextApiRequest & { params?: { id: number } }, NextApiResponse>();
 
 router
   .use(async (req, res, next) => {
@@ -35,12 +35,10 @@ router
     // TODO: ensure permissions to edit Project
 
     try {
-      const { slug } = req.query
-      console.log(req.query);
-      const id = parseInt(slug![1] as string) as number;
+      const id = req.params!.id;
 
       const projects = tigrisDb.getCollection<Project>(Project);
-      const project = await projects.findOne({ filter: { id: id } });
+      const project = await projects.findOne({ filter: { id } });
 
       if (!project) {
         res.status(404).json({ error: `A project with id "${id}" could not be found.` });
@@ -77,28 +75,34 @@ router
     // 1. owner 2. champion 3. an admin
 
     try {
-      const { slug } = req.query
-      const id = parseInt(slug![1] as string) as number;
+      const id = req.params!.id;
 
       const projects = tigrisDb.getCollection<Project>(Project);
-      const project = await projects.findOne({ filter: { id: id } });
+      const project = await projects.findOne({ filter: { id } });
 
       if (project) {
         // TODO: get the owner, champion, and admins for the project
         const projectValues = new ProjectValues({ id: project.id, goal: project.goalDescription, name: project.name });
 
-        const users = tigrisDb.getCollection<User>(User);
-        const champion = await users.findOne({ filter: { id: project.championId } });
-        const owner = await users.findOne({ filter: { id: project.ownerId } });
-        const adminsEmails: string[] = [];
-        for await (const adminId of project.adminIds) {
-          const admin = await users.findOne({ filter: { id: adminId } });
-          adminsEmails.push(admin?.email as string)
-        }
+        const usersCollection = tigrisDb.getCollection<User>(User);
+        const query: FindQuery<User> = {
+          filter: {
+            op: LogicalOperator.OR,
+            selectorFilters: [
+              { id: project.ownerId },
+              { id: project.championId },
+              ...project.adminIds.map(id => { return { id } })
+            ],
+          },
+        };
 
-        projectValues.champion = champion?.email as string;
-        projectValues.owner = owner?.email as string;
-        projectValues.adminEmails = adminsEmails;
+        const usersCursor = usersCollection.findMany(query);
+        const users = await usersCursor.toArray();
+        projectValues.champion = users.find(u => u.id === project.championId)!.email;
+        projectValues.owner = users.find(u => u.id === project.ownerId)!.email;
+        projectValues.adminEmails = users.filter(
+          u => project.adminIds.includes(u.id!)
+        ).map(u => u.email);
 
         console.log("projectValues", projectValues);
         res.status(200).json(projectValues);
@@ -122,7 +126,7 @@ router
     }
 
     try {
-      const users = tigrisDb.getCollection<User>("users");
+      const users = tigrisDb.getCollection<User>(User);
 
       let owner = await users.findOne({ filter: { email: projectCreationRequest.owner } });
       if (!owner) {
@@ -161,7 +165,7 @@ router
       }
 
       const creationDate = new Date();
-      const projects = tigrisDb.getCollection<Project>("projects");
+      const projects = tigrisDb.getCollection<Project>(Project);
       const insertedProject = await projects.insertOne({
         name: projectCreationRequest.name,
         championId: champion.id!,

@@ -66,7 +66,7 @@ const ProjectCard = ({
   );
 };
 
-export default function Page() {
+export default function Dashboard() {
   const { data: session } = useSession();
   const isAdmin = session?.user.role === "admin";
 

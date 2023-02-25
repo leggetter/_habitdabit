@@ -15,6 +15,42 @@ export class ProjectValues {
   }
 }
 
+export function useProjects(search: string) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [error, setError] = useState<string>();
+  const [isLoading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const getProjects = async (search: string) => {
+      setLoading(true);
+
+      try {
+        let url = "/api/v1/projects/";
+        if (search) {
+          url += `q=${search}`;
+        }
+        const result = await fetch(url);
+        const json = await result.json();
+        if (result.status === 200) {
+          const projectResult: Project[] = json;
+          setProjects(projectResult);
+        } else {
+          setError(json.error);
+        }
+      } catch (ex) {
+        console.error(ex);
+        setError("An error occurred when fetching the project information.");
+      }
+
+      setLoading(false);
+    };
+
+    getProjects(search);
+  }, [search]);
+
+  return { projects, error, isLoading }
+}
+
 export function useProject(id: string) {
   const [project, setProject] = useState<ProjectValues>();
   const [error, setError] = useState<string>();

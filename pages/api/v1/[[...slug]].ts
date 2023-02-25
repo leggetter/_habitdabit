@@ -14,6 +14,8 @@ import { FindQuery, LogicalOperator, Status } from "@tigrisdata/core";
 // You may want to pass in NextApiRequest and NextApiResponse
 const router = createRouter<NextApiRequest & { params?: { id: number } }, NextApiResponse>();
 
+const projects = tigrisDb.getCollection<Project>(Project);
+
 router
   .use(async (req, res, next) => {
     const session = await getServerSession(req, res, authOptions)
@@ -28,16 +30,33 @@ router
     const end = Date.now();
     console.log(`Request took ${end - start}ms`);
   })
-  .get("/api/v1/projects", (req, res) => {
-    res.send("this should authenticate the user ang get all projects that they can see. Yipee!");
+  .get("/api/v1/projects", async (req, res: NextApiResponse<Project[] | { error: string }>) => {
+    try {
+      const search = req.query.search as string;
+
+      if (search) {
+        const iterator = projects.search({ q: search })
+        const searchResults = await iterator.toArray();
+        let projectResults: Project[] = [];
+        const results = searchResults.forEach(searchResult => {
+          projectResults = projectResults.concat(searchResult.hits.map(hit => hit.document));
+        })
+        return res.status(200).json(projectResults);
+      }
+      else {
+        const cursor = projects.findMany();
+        return res.status(200).json(await cursor.toArray());
+      }
+    }
+    catch (e: any) {
+      return res.status(500).json({ error: e.toString() });
+    }
   })
   .patch("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
     // TODO: ensure permissions to edit Project
 
     try {
       const id = req.params!.id;
-
-      const projects = tigrisDb.getCollection<Project>(Project);
       const project = await projects.findOne({ filter: { id } });
 
       if (!project) {

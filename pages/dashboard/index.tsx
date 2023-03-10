@@ -8,6 +8,9 @@ import {
   Stack,
   Text,
   SimpleGrid,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -77,19 +80,21 @@ const ProjectsList = ({
   isAdmin: boolean;
 }) => {
   return (
-    <SimpleGrid columns={3} spacing={5}>
-      {projects.map((project) => {
-        return (
-          <ProjectCard
-            key={project.id}
-            id={project.id!.toString()}
-            name={project.name}
-            goalDescription={project.goalDescription}
-            showEditButton={isAdmin}
-          />
-        );
-      })}
-    </SimpleGrid>
+    <>
+      <SimpleGrid columns={3} spacing={5}>
+        {projects.map((project) => {
+          return (
+            <ProjectCard
+              key={project.id}
+              id={project.id!.toString()}
+              name={project.name}
+              goalDescription={project.goalDescription}
+              showEditButton={isAdmin}
+            />
+          );
+        })}
+      </SimpleGrid>
+    </>
   );
 };
 
@@ -103,7 +108,13 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Heading as="h1">Dashboard</Heading>
+      <Breadcrumb mb={5}>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/dashboard" isCurrentPage={true}>
+            🏠 Dashboard
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumb>
 
       <Box as="section" mt={10}>
         <Heading as="h2">Projects</Heading>

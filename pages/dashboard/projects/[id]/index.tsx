@@ -11,8 +11,10 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Box,
 } from "@chakra-ui/react";
 import { ProjectValues, useProject } from "../../../../lib/project-helpers";
+import EditButton from "../../../../components/projects/edit-button";
 
 const ProjectTable = ({ project }: { project: ProjectValues }) => {
   return (
@@ -71,7 +73,7 @@ export default function ProjectPage() {
       )}
       <Breadcrumb mb={5}>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          <BreadcrumbLink href="/dashboard">🏠 Dashboard</BreadcrumbLink>
         </BreadcrumbItem>
 
         <BreadcrumbItem>
@@ -83,7 +85,16 @@ export default function ProjectPage() {
           </BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
-      {project && <ProjectTable project={project} />}
+
+      {project && (
+        <>
+          <ProjectTable project={project} />
+
+          <Box mt={5}>
+            <EditButton id={project.id!} />
+          </Box>
+        </>
+      )}
     </Layout>
   );
 }

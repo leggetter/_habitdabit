@@ -1,4 +1,9 @@
-import { Heading } from "@chakra-ui/react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Heading,
+} from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import Layout from "../../../../components/layout";
 import ProjectForm from "../../../../components/projects/project-form";
@@ -24,7 +29,27 @@ export default function PostPage() {
       )}
       {project && (
         <>
+          <Breadcrumb mb={5}>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">🏠 Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`/dashboard/projects/${project?.id}`}>
+                {project?.name}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                href={`/dashboard/projects/${project?.id}/edit`}
+                isCurrentPage
+              >
+                edit
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
           <Heading as="h1">Edit Project: {project.name}</Heading>
+
           <ProjectForm
             method="PATCH"
             action={`/api/v1/projects/${project.id}`}

@@ -1,8 +1,17 @@
-import { Heading } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import Layout from "../../../../components/layout";
 
-import { Table, Tbody, Tr, Td, TableContainer } from "@chakra-ui/react";
+import {
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  TableContainer,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+} from "@chakra-ui/react";
 import { ProjectValues, useProject } from "../../../../lib/project-helpers";
 
 const ProjectTable = ({ project }: { project: ProjectValues }) => {
@@ -10,7 +19,7 @@ const ProjectTable = ({ project }: { project: ProjectValues }) => {
     <>
       <Heading>Project: {project?.name}</Heading>
 
-      <TableContainer maxW={800}>
+      <TableContainer maxW={800} wordBreak="normal" whiteSpace="normal">
         <Table variant="striped" colorScheme="teal">
           <Tbody>
             <Tr>
@@ -60,6 +69,20 @@ export default function ProjectPage() {
       {!error && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}
+      <Breadcrumb mb={5}>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+        </BreadcrumbItem>
+
+        <BreadcrumbItem>
+          <BreadcrumbLink
+            href={`/dashboard/projects/${project?.id}`}
+            isCurrentPage
+          >
+            {project?.name}
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumb>
       {project && <ProjectTable project={project} />}
     </Layout>
   );

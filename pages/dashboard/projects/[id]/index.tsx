@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { ProjectValues, useProject } from "../../../../lib/project-helpers";
 import EditButton from "../../../../components/projects/edit-button";
+import HDLinkButton from "../../../../components/hd-link-button";
 
 const ProjectTable = ({ project }: { project: ProjectValues }) => {
   return (
@@ -41,6 +42,22 @@ const ProjectTable = ({ project }: { project: ProjectValues }) => {
                 <b>Owner</b>
               </Td>
               <Td>{project?.owner}</Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Habit schedule template</b>
+              </Td>
+              <Td>
+                {project?.habitsScheduleTemplate.length > 0
+                  ? `${project?.habitsScheduleTemplate.length} scheduled habits(s) in template`
+                  : "No scheduled habits"}
+                <HDLinkButton
+                  ml={2}
+                  href={`/dashboard/projects/${project.id}/template`}
+                >
+                  View
+                </HDLinkButton>
+              </Td>
             </Tr>
             <Tr>
               <Td>

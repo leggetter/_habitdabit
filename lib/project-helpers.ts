@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useState } from "react";
-import { Project } from "../db/models/project";
+import { ISingleHabitTemplate, Project, IScheduledHabits, IWeeklyHabitTemplate } from "../db/models/project";
 
 export class ProjectValues {
   public id?: number;
@@ -9,6 +9,10 @@ export class ProjectValues {
   public owner: string = "";
   public champion: string = "";
   public adminEmails: string[] = [];
+  public habitsScheduleTemplate: IWeeklyHabitTemplate = { days: [] };
+  // public scheduledHabits: IScheduledHabits = {
+  //   habits: [],
+  // };
 
   public constructor(init?: Partial<ProjectValues>) {
     Object.assign(this, init);

@@ -15,9 +15,9 @@ It's also a project created to help with my onboarding at [Tigris Data](https://
 
 ### Prerequisites
 
-* A [Tigris Cloud](https://www.tigrisdata.com) account
-* Install the [Tigris CLI](https://www.tigrisdata.com/docs/sdkstools/cli/installation/)
-* [Node.js > 18.13.0](https://nodejs.org/en/download/) installed
+- A [Tigris Cloud](https://www.tigrisdata.com) account
+- Install the [Tigris CLI](https://www.tigrisdata.com/docs/sdkstools/cli/installation/)
+- [Node.js > 18.13.0](https://nodejs.org/en/download/) installed
 
 ### Get the code and install dependencies
 
@@ -57,17 +57,19 @@ If you'd prefer to create your project and save the project settings to environm
 3. Navigate to **Application Keys**
 4. Click the eye icon next to the Key with the same name as your Project
 5. Create a `.env.development.local` file and copy:
-  - **URL** to a variable named `TIGRIS_URI`
-  - **Name** to a variable named `TIGRIS_PROJECT`
-  - **Client ID** to a variable named `TIGRIS_CLIENT_ID`
-  - **Client Secret** to a variable named `TIGRIS_CLIENT_SECRET`
+
+- **URL** to a variable named `TIGRIS_URI`
+- **Name** to a variable named `TIGRIS_PROJECT`
+- **Client ID** to a variable named `TIGRIS_CLIENT_ID`
+- **Client Secret** to a variable named `TIGRIS_CLIENT_SECRET`
+
 6. Finally, add another variable called `TIGRIS_DB_BRANCH` with a value of `develop`
 
 An example `.env.development.local` is in the repo called `.env.development.local.example`.
 
 ## Contribute 🙌
 
-Please do get involved! To start off with we're building a simple MVP:
+Please do get involved! To start off with, we're building a simple MVP:
 
 ![HabitDabit sitemap](./docs/habit-dabit-sitemap.jpg)
 

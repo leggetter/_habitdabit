@@ -20,7 +20,7 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Flex,
+  HStack,
 } from "@chakra-ui/react";
 import { deepCopy, ProjectValues, useProject } from "lib/project-helpers";
 import {
@@ -28,23 +28,55 @@ import {
   IWeeklyHabitTemplate,
   Project,
 } from "db/models/project";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { ConfirmDialog } from "components/confirm-dialog";
 
 function DayOfWeekListing({
   day,
   habits,
   addButtonClicked,
+  removeButtonClicked,
 }: {
   day: string;
   habits: Array<ISingleHabitTemplate>;
   addButtonClicked: (day: string) => void;
+  removeButtonClicked: (day: string, habitIndex: number) => void;
 }) {
   return (
-    <Box mb={10}>
+    <Box mb={10} width={600}>
       <Heading as="h3" size="lg">
-        <Box as="span" display="inline-block" width={200}>
-          {day}
-        </Box>{" "}
+        {day}
+      </Heading>
+      {habits.length === 0 && <Box>No habits defined for {day}</Box>}
+      {habits.map((habit, index) => {
+        return (
+          <HStack
+            key={`${day}_habit_${index}`}
+            align="stretch"
+            alignContent="center"
+            justifyContent="center"
+            mt={2}
+          >
+            <Box width={400} mr={5}>
+              {habit.description}
+            </Box>
+            <Box width={200} pr={5} textAlign="right">
+              {habit.value}
+            </Box>
+            <Box>
+              <Button
+                title="Remove Habit"
+                onClick={() => {
+                  removeButtonClicked(day, index);
+                }}
+              >
+                -
+              </Button>
+            </Box>
+          </HStack>
+        );
+      })}
+      <Box mt={2} textAlign="right">
         <Button
           title="Add new habit"
           onClick={() => {
@@ -53,18 +85,7 @@ function DayOfWeekListing({
         >
           +
         </Button>
-      </Heading>
-      {habits.length === 0 && <Box>No habits defined for {day}</Box>}
-      {habits.map((habit, index) => {
-        return (
-          <Flex key={`${day}_habit_${index}`} direction="row">
-            <Box width={200} mr={5}>
-              {habit.description}
-            </Box>
-            <Box>{habit.value}</Box>
-          </Flex>
-        );
-      })}
+      </Box>
     </Box>
   );
 }
@@ -119,6 +140,7 @@ export default function TemplatePage() {
   const router = useRouter();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [savingButtonText, setSavingButtonText] = useState<string>("Save");
   const {
     project,
     error: projectError,
@@ -145,12 +167,19 @@ export default function TemplatePage() {
   const [edited, setEdited] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (saving) {
+      setSavingButtonText("Saving");
+    } else if (edited) {
+      setSavingButtonText("Save");
+    } else {
+      setSavingButtonText("Saved");
+    }
+  }, [saving, edited]);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isCancelDialogOpen,
-    onOpen: cancelDialogOnOpen,
-    onClose: cancelDialogOnClose,
-  } = useDisclosure();
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [confirmDialogText, setConfirmDialogText] = useState<string>("");
   const [editingHabitDay, setEditingHabitDay] = useState<string | null>(null);
   const [habitDescription, setHabitDescription] = useState<string>("");
   const [habitValue, setHabitValue] = useState<number>(0);
@@ -160,9 +189,16 @@ export default function TemplatePage() {
     onOpen();
   };
 
+  const handleRemoveButtonClick = (day: string, habitIndex: number) => {
+    setEditingHabitDay(day);
+  };
+
   const handleHabitCancel = () => {
     if (habitDescription.length > 0 || habitValue > 0) {
-      cancelDialogOnOpen();
+      setConfirmDialogText(
+        "Are you sure you with to cancel creating the habit?"
+      );
+      setShowConfirmDialog(true);
     } else {
       onClose();
     }
@@ -176,11 +212,11 @@ export default function TemplatePage() {
 
   const confirmCancellingHabitCreation = () => {
     onClose();
-    cancelDialogOnClose();
+    setShowConfirmDialog(false);
     clearHabitEditing();
   };
 
-  const handleHabitSave = () => {
+  const handleHabitAdd = () => {
     if (editingHabitDay === null) {
       throw Error("editingHabitDay must be set");
     }
@@ -268,31 +304,14 @@ export default function TemplatePage() {
         </BreadcrumbItem>
       </Breadcrumb>
 
-      <Modal
-        closeOnOverlayClick={false}
-        isOpen={isCancelDialogOpen}
-        onClose={handleHabitCancel}
-        isCentered
-        blockScrollOnMount={false}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalBody pb={6}>
-            Are you sure you with to cancel creating the habit?
-          </ModalBody>
-
-          <ModalFooter>
-            <Button
-              colorScheme="red"
-              mr={3}
-              onClick={confirmCancellingHabitCreation}
-            >
-              Yes
-            </Button>
-            <Button onClick={cancelDialogOnClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        body={confirmDialogText}
+        onConfirm={confirmCancellingHabitCreation}
+        onCancel={() => {
+          setShowConfirmDialog(false);
+        }}
+      />
 
       <Modal
         closeOnOverlayClick={false}
@@ -329,8 +348,8 @@ export default function TemplatePage() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleHabitSave}>
-              Save
+            <Button colorScheme="blue" mr={3} onClick={handleHabitAdd}>
+              Add
             </Button>
             <Button onClick={handleHabitCancel}>Cancel</Button>
           </ModalFooter>
@@ -346,6 +365,7 @@ export default function TemplatePage() {
                 day={day}
                 habits={weeklySchedule.days[index].habits}
                 addButtonClicked={handleAddButtonClick}
+                removeButtonClicked={handleRemoveButtonClick}
               />
             ))}
           </Box>
@@ -355,10 +375,10 @@ export default function TemplatePage() {
           <Box>
             <Button
               colorScheme="blue"
-              isDisabled={!edited}
+              isDisabled={!edited || saving}
               onClick={saveWeeklyScheduleTemplate}
             >
-              Save
+              {savingButtonText}
             </Button>
           </Box>
         </>

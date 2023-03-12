@@ -72,7 +72,6 @@ router
         // You cannot edit the owner (for now)
         // so those values are not being changed
         const projectUpdateRequest = req.body as ProjectValues;
-        console.log(projectUpdateRequest);
 
         const update: UpdateQuery<Project> = {
           filter: {
@@ -85,6 +84,9 @@ router
           },
         };
 
+        // It would be nice to be able to more explicitly edit fields.
+        // Instead we rely on fields being undefined or Arrays being empty
+        // in order for a field not be edited.
         // if(projectUpdateRequest.name) {
         //   update.fields.name = projectUpdateRequest.name;
         // }

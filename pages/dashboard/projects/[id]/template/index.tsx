@@ -3,11 +3,6 @@ import Layout from "components/layout";
 
 import {
   Heading,
-  Table,
-  Tbody,
-  Tr,
-  Td,
-  TableContainer,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -33,8 +28,7 @@ import {
   IWeeklyHabitTemplate,
   Project,
 } from "db/models/project";
-import { useState } from "react";
-import { create } from "domain";
+import { useEffect, useState } from "react";
 
 function DayOfWeekListing({
   day,
@@ -61,9 +55,9 @@ function DayOfWeekListing({
         </Button>
       </Heading>
       {habits.length === 0 && <Box>No habits defined for {day}</Box>}
-      {habits.map((habit) => {
+      {habits.map((habit, index) => {
         return (
-          <Flex direction="row">
+          <Flex key={`${day}_habit_${index}`} direction="row">
             <Box width={200} mr={5}>
               {habit.description}
             </Box>
@@ -124,12 +118,32 @@ const createWeeklyTemplate = (): IWeeklyHabitTemplate => {
 export default function TemplatePage() {
   const router = useRouter();
 
-  const { project, error, isLoading } = useProject(router.query.id as string);
-
+  const [errors, setErrors] = useState<string[]>([]);
+  const {
+    project,
+    error: projectError,
+    isLoading,
+  } = useProject(router.query.id as string);
   const [weeklySchedule, setWeeklySchedule] = useState<IWeeklyHabitTemplate>(
     project?.habitsScheduleTemplate || createWeeklyTemplate()
   );
+
+  useEffect(() => {
+    if (project?.habitsScheduleTemplate) {
+      setWeeklySchedule(project.habitsScheduleTemplate);
+    }
+  }, [project]);
+
+  useEffect(() => {
+    if (projectError) {
+      setErrors((prev) => {
+        return [...prev, projectError];
+      });
+    }
+  }, [projectError]);
+
   const [edited, setEdited] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -194,6 +208,7 @@ export default function TemplatePage() {
   };
 
   const saveWeeklyScheduleTemplate = async () => {
+    setSaving(true);
     const projectValues = new ProjectValues({
       habitsScheduleTemplate: weeklySchedule,
     });
@@ -207,19 +222,33 @@ export default function TemplatePage() {
 
     try {
       const response = await fetch(`/api/v1/projects/${project!.id}`, params);
-      const body = (await response.json()) as Project;
-      // onSubmitComplete(body);
-    } catch (err) {
-      // TODO: have some form-level errors
+      if (response.status === 200) {
+        const body = (await response.json()) as Project;
+        setEdited(false);
+      } else {
+        const body = await response.json();
+        setErrors((prev) => {
+          return [...prev, body.error];
+        });
+      }
+    } catch (err: any) {
       console.error(err);
+      setErrors((prev) => [...prev, err.toString()]);
     }
+    setSaving(false);
   };
 
   return (
     <Layout>
       {isLoading && <p>⏲️ Loading...</p>}
-      {error && <p>{error}</p>}
-      {!error && !isLoading && !project && (
+      {errors.length > 0 && (
+        <p>
+          {errors.map((e) => {
+            return <p>{e}</p>;
+          })}
+        </p>
+      )}
+      {errors.length === 0 && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}
       <Breadcrumb mb={5}>
@@ -313,6 +342,7 @@ export default function TemplatePage() {
           <Box mt={5}>
             {DAYS_OF_WEEK.map((day, index) => (
               <DayOfWeekListing
+                key={`day_of_week_${day}`}
                 day={day}
                 habits={weeklySchedule.days[index].habits}
                 addButtonClicked={handleAddButtonClick}

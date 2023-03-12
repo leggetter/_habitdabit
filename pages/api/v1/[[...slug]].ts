@@ -85,6 +85,16 @@ router
           },
         };
 
+        // if(projectUpdateRequest.name) {
+        //   update.fields.name = projectUpdateRequest.name;
+        // }
+        // if(projectUpdateRequest.goal) {
+        //   update.fields.goalDescription = projectUpdateRequest.goal;
+        // }
+        // if(projectUpdateRequest.habitsScheduleTemplate) {
+        //   update.fields.habitsScheduleTemplate = projectUpdateRequest.habitsScheduleTemplate;
+        // }
+
         const result = await projects.updateOne(update);
         if (result.status === Status.Updated) {
           res.status(200).json(project);
@@ -132,6 +142,7 @@ router
         projectValues.adminEmails = users.filter(
           u => project.adminIds.includes(u.id!)
         ).map(u => u.email);
+        projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
 
         console.log("projectValues", projectValues);
         res.status(200).json(projectValues);
@@ -181,7 +192,7 @@ router
 
         champion = await users.insertOne({
           name: "",
-          email: projectCreationRequest.champion,
+          email: projectCreationRequest.champion!,
           createdAt: new Date(),
         });
 
@@ -196,9 +207,9 @@ router
       const creationDate = new Date();
       const projects = tigrisDb.getCollection<Project>(Project);
       const insertedProject = await projects.insertOne({
-        name: projectCreationRequest.name,
+        name: projectCreationRequest.name!,
         championId: champion.id!,
-        goalDescription: projectCreationRequest.goal,
+        goalDescription: projectCreationRequest.goal!,
         ownerId: owner.id!,
         adminIds: [owner.id!],
         startDate: creationDate,

@@ -81,7 +81,7 @@ export class Project {
   @Field(TigrisDataTypes.DATE_TIME)
   startDate!: Date;
 
-  @Field(TigrisDataTypes.OBJECT, { elements: WeeklyHabitTemplate })
+  @Field()
   habitsScheduleTemplate?: WeeklyHabitTemplate;
 
   // @Field(TigrisDataTypes.OBJECT, { elements: ScheduledHabits })

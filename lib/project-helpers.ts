@@ -4,12 +4,12 @@ import { Project, IWeeklyHabitTemplate } from "../db/models/project";
 
 export class ProjectValues {
   public id?: number;
-  public name: string = "";
-  public goal: string = "";
-  public owner: string = "";
-  public champion: string = "";
-  public adminEmails: string[] = [];
-  public habitsScheduleTemplate: IWeeklyHabitTemplate = { days: [] };
+  public name: string | undefined;
+  public goal: string | undefined;
+  public owner: string | undefined;
+  public champion: string | undefined;
+  public adminEmails: string[] | undefined;
+  public habitsScheduleTemplate: IWeeklyHabitTemplate | undefined;
   // public scheduledHabits: IScheduledHabits = {
   //   habits: [],
   // };

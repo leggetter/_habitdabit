@@ -146,7 +146,6 @@ router
         ).map(u => u.email);
         projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
 
-        console.log("projectValues", projectValues);
         res.status(200).json(projectValues);
       }
       else {

@@ -224,7 +224,6 @@ export default function TemplatePage() {
   };
 
   const handleHabitCancel = () => {
-    console.log(habitDescription);
     if (habitDescription.length > 0 || habitValue > 0) {
       setConfirmDialogAction("CANCEL_CREATE_HABIT");
       setConfirmDialogText(

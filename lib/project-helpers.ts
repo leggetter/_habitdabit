@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useState } from "react";
-import { ISingleHabitTemplate, Project, IScheduledHabits, IWeeklyHabitTemplate } from "../db/models/project";
+import { Project, IWeeklyHabitTemplate } from "../db/models/project";
 
 export class ProjectValues {
   public id?: number;
@@ -87,4 +87,8 @@ export function useProject(id: string) {
   }, [id]);
 
   return { project, error, isLoading }
-}
+};
+
+export const deepCopy = (obj: any) => {
+  return JSON.parse(JSON.stringify(obj));
+};

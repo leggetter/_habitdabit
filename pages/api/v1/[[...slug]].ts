@@ -8,13 +8,14 @@ import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
 import { ProjectValues } from "../../../lib/project-helpers";
-import { FindQuery, LogicalOperator, Status } from "@tigrisdata/core";
+import { FindQuery, LogicalOperator, Status, UpdateQuery } from "@tigrisdata/core";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
 const router = createRouter<NextApiRequest & { params?: { id: number } }, NextApiResponse>();
 
 const projects = tigrisDb.getCollection<Project>(Project);
+const users = tigrisDb.getCollection<User>(User);
 
 router
   .use(async (req, res, next) => {
@@ -53,8 +54,6 @@ router
     }
   })
   .patch("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
-    // TODO: ensure permissions to edit Project
-
     try {
       const id = req.params!.id;
       const project = await projects.findOne({ filter: { id } });
@@ -63,19 +62,30 @@ router
         res.status(404).json({ error: `A project with id "${id}" could not be found.` });
       }
       else {
-        // You cannot edit the owner or champion (for now)
+        const session = await getServerSession(req, res, authOptions)
+        const owner = await users.findOne({ filter: { id: project.ownerId } });
+
+        if (owner?.email !== session?.user.email) {
+          res.status(403).json({ error: "The logged in user does not have permission to edit the project" });
+          return;
+        }
+        // You cannot edit the owner (for now)
         // so those values are not being changed
         const projectUpdateRequest = req.body as ProjectValues;
-        const result = await projects.updateOne({
+        console.log(projectUpdateRequest);
+
+        const update: UpdateQuery<Project> = {
           filter: {
             id: project.id,
           },
           fields: {
             name: projectUpdateRequest.name,
             goalDescription: projectUpdateRequest.goal,
-          }
-        });
+            habitsScheduleTemplate: projectUpdateRequest.habitsScheduleTemplate,
+          },
+        };
 
+        const result = await projects.updateOne(update);
         if (result.status === Status.Updated) {
           res.status(200).json(project);
         }

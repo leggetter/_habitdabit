@@ -40,7 +40,11 @@ function DayOfWeekListing({
   day: string;
   habits: Array<ISingleHabitTemplate>;
   addButtonClicked: (day: string) => void;
-  removeButtonClicked: (day: string, habitIndex: number) => void;
+  removeButtonClicked: (
+    day: string,
+    habitIndex: number,
+    habitText: string
+  ) => void;
 }) {
   return (
     <Box mb={10} width={600}>
@@ -67,7 +71,7 @@ function DayOfWeekListing({
               <Button
                 title="Remove Habit"
                 onClick={() => {
-                  removeButtonClicked(day, index);
+                  removeButtonClicked(day, index, habit.description!);
                 }}
               >
                 -
@@ -178,23 +182,51 @@ export default function TemplatePage() {
   }, [saving, edited]);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [confirmDialogText, setConfirmDialogText] = useState<string>("");
-  const [editingHabitDay, setEditingHabitDay] = useState<string | null>(null);
+  const [confirmDialogAction, setConfirmDialogAction] = useState<string>("");
+
+  const [editingHabit, setEditingHabit] = useState<{
+    day: string;
+    habitIndex?: number;
+  } | null>(null);
   const [habitDescription, setHabitDescription] = useState<string>("");
   const [habitValue, setHabitValue] = useState<number>(0);
 
   const handleAddButtonClick = (day: string) => {
-    setEditingHabitDay(day);
+    setEditingHabit({ day });
     onOpen();
   };
 
-  const handleRemoveButtonClick = (day: string, habitIndex: number) => {
-    setEditingHabitDay(day);
+  const handleRemoveButtonClick = (
+    day: string,
+    habitIndex: number,
+    habitText: string
+  ) => {
+    setEditingHabit({ day, habitIndex });
+    setConfirmDialogText(
+      `Are you sure you want to delete the habit "${habitText}"`
+    );
+    setShowConfirmDialog(true);
+    setConfirmDialogAction("DELETE_HABIT");
+  };
+
+  const handleConfirm = (action: string) => {
+    switch (action) {
+      case "CANCEL_CREATE_HABIT":
+        confirmCancellingHabitCreation();
+        break;
+      case "DELETE_HABIT":
+        handleHabitDelete();
+        break;
+    }
   };
 
   const handleHabitCancel = () => {
+    console.log(habitDescription);
     if (habitDescription.length > 0 || habitValue > 0) {
+      setConfirmDialogAction("CANCEL_CREATE_HABIT");
       setConfirmDialogText(
         "Are you sure you with to cancel creating the habit?"
       );
@@ -207,7 +239,7 @@ export default function TemplatePage() {
   const clearHabitEditing = () => {
     setHabitDescription("");
     setHabitValue(0);
-    setEditingHabitDay(null);
+    setEditingHabit(null);
   };
 
   const confirmCancellingHabitCreation = () => {
@@ -217,10 +249,10 @@ export default function TemplatePage() {
   };
 
   const handleHabitAdd = () => {
-    if (editingHabitDay === null) {
+    if (editingHabit === null) {
       throw Error("editingHabitDay must be set");
     }
-    const dayIndex = DAYS_OF_WEEK.indexOf(editingHabitDay);
+    const dayIndex = DAYS_OF_WEEK.indexOf(editingHabit.day);
     const scheduleDay = weeklySchedule.days[dayIndex];
     scheduleDay.habits.push({
       description: habitDescription,
@@ -230,6 +262,18 @@ export default function TemplatePage() {
     setWeeklySchedule(updatedWeeklySchedule);
     setEdited(true);
     onClose();
+    clearHabitEditing();
+  };
+
+  const handleHabitDelete = () => {
+    const dayIndex = DAYS_OF_WEEK.indexOf(editingHabit!.day);
+    const scheduleDay = weeklySchedule.days[dayIndex];
+    scheduleDay.habits.splice(editingHabit?.habitIndex!, 1);
+
+    const updatedWeeklySchedule = deepCopy(weeklySchedule);
+    setWeeklySchedule(updatedWeeklySchedule);
+    setEdited(true);
+    setShowConfirmDialog(false);
     clearHabitEditing();
   };
 
@@ -307,7 +351,8 @@ export default function TemplatePage() {
       <ConfirmDialog
         isOpen={showConfirmDialog}
         body={confirmDialogText}
-        onConfirm={confirmCancellingHabitCreation}
+        action={confirmDialogAction}
+        onConfirm={handleConfirm}
         onCancel={() => {
           setShowConfirmDialog(false);
         }}

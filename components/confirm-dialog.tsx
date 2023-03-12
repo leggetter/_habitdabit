@@ -9,34 +9,38 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 
+export type ConfirmDialogProps = {
+  body: string;
+  isOpen: boolean;
+  action: string;
+  onConfirm: (action: string) => void;
+  onCancel: (action: string) => void;
+};
+
 export const ConfirmDialog = ({
   body,
   isOpen,
+  action,
   onConfirm,
   onCancel,
-}: {
-  body: string;
-  isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) => {
+}: ConfirmDialogProps) => {
   const { isOpen: isCancelDialogOpen } = useDisclosure({ isOpen });
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   return (
     <AlertDialog
       isOpen={isCancelDialogOpen}
       leastDestructiveRef={cancelRef}
-      onClose={onCancel}
+      onClose={() => onCancel(action)}
     >
       <AlertDialogOverlay>
         <AlertDialogContent>
           <AlertDialogBody>{body}</AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onCancel}>
+            <Button ref={cancelRef} onClick={() => onCancel(action)}>
               No
             </Button>
-            <Button colorScheme="red" onClick={onConfirm} ml={3}>
+            <Button colorScheme="red" onClick={() => onConfirm(action)} ml={3}>
               Yes
             </Button>
           </AlertDialogFooter>

@@ -2,24 +2,32 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 
-import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]"
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 import { tigrisDb } from "../../../lib/tigris";
 import { Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
 import { ProjectValues } from "../../../lib/project-helpers";
-import { FindQuery, LogicalOperator, Status, UpdateQuery } from "@tigrisdata/core";
+import {
+  FindQuery,
+  LogicalOperator,
+  Status,
+  UpdateQuery,
+} from "@tigrisdata/core";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
-const router = createRouter<NextApiRequest & { params?: { id: number } }, NextApiResponse>();
+const router = createRouter<
+  NextApiRequest & { params?: { id: number } },
+  NextApiResponse
+>();
 
 const projects = tigrisDb.getCollection<Project>(Project);
 const users = tigrisDb.getCollection<User>(User);
 
 router
   .use(async (req, res, next) => {
-    const session = await getServerSession(req, res, authOptions)
+    const session = await getServerSession(req, res, authOptions);
     // console.log('session', session);
     if (!session) {
       res.status(401).end();
@@ -31,145 +39,189 @@ router
     const end = Date.now();
     console.log(`Request took ${end - start}ms`);
   })
-  .get("/api/v1/projects", async (req, res: NextApiResponse<Project[] | { error: string }>) => {
-    try {
-      const search = req.query.search as string;
+  .get(
+    "/api/v1/projects",
+    async (req, res: NextApiResponse<Project[] | { error: string }>) => {
+      try {
+        const search = req.query.search as string;
 
-      if (search) {
-        const iterator = projects.search({ q: search })
-        const searchResults = await iterator.toArray();
-        let projectResults: Project[] = [];
-        const results = searchResults.forEach(searchResult => {
-          projectResults = projectResults.concat(searchResult.hits.map(hit => hit.document));
-        })
-        return res.status(200).json(projectResults);
-      }
-      else {
-        const cursor = projects.findMany();
-        return res.status(200).json(await cursor.toArray());
-      }
-    }
-    catch (e: any) {
-      return res.status(500).json({ error: e.toString() });
-    }
-  })
-  .patch("/api/v1/projects/:id", async (req, res: NextApiResponse<Project | { error: string }>) => {
-    try {
-      const id = req.params!.id;
-      const project = await projects.findOne({ filter: { id } });
-
-      if (!project) {
-        res.status(404).json({ error: `A project with id "${id}" could not be found.` });
-      }
-      else {
-        const session = await getServerSession(req, res, authOptions)
-        const owner = await users.findOne({ filter: { id: project.ownerId } });
-
-        if (owner?.email !== session?.user.email) {
-          res.status(403).json({ error: "The logged in user does not have permission to edit the project" });
-          return;
+        if (search) {
+          const iterator = projects.search({ q: search });
+          const searchResults = await iterator.toArray();
+          let projectResults: Project[] = [];
+          const results = searchResults.forEach((searchResult) => {
+            projectResults = projectResults.concat(
+              searchResult.hits.map((hit) => hit.document)
+            );
+          });
+          return res.status(200).json(projectResults);
+        } else {
+          const cursor = projects.findMany();
+          return res.status(200).json(await cursor.toArray());
         }
-        // You cannot edit the owner (for now)
-        // so those values are not being changed
-        const projectUpdateRequest = req.body as ProjectValues;
+      } catch (e: any) {
+        return res.status(500).json({ error: e.toString() });
+      }
+    }
+  )
+  .patch(
+    "/api/v1/projects/:id",
+    async (req, res: NextApiResponse<Project | { error: string }>) => {
+      try {
+        const id = req.params!.id;
+        const project = await projects.findOne({ filter: { id } });
 
-        const update: UpdateQuery<Project> = {
-          filter: {
+        if (!project) {
+          res
+            .status(404)
+            .json({ error: `A project with id "${id}" could not be found.` });
+        } else {
+          const session = await getServerSession(req, res, authOptions);
+          const owner = await users.findOne({
+            filter: { id: project.ownerId },
+          });
+
+          if (owner?.email !== session?.user.email) {
+            res
+              .status(403)
+              .json({
+                error:
+                  "The logged in user does not have permission to edit the project",
+              });
+            return;
+          }
+          // You cannot edit the owner (for now)
+          // so those values are not being changed
+          const projectUpdateRequest = req.body as ProjectValues;
+
+          const update: UpdateQuery<Project> = {
+            filter: {
+              id: project.id,
+            },
+            fields: {
+              name: projectUpdateRequest.name,
+              goalDescription: projectUpdateRequest.goal,
+              habitsScheduleTemplate:
+                projectUpdateRequest.habitsScheduleTemplate,
+            },
+          };
+
+          // It would be nice to be able to more explicitly edit fields.
+          // Instead we rely on fields being undefined or Arrays being empty
+          // in order for a field not be edited.
+          // if(projectUpdateRequest.name) {
+          //   update.fields.name = projectUpdateRequest.name;
+          // }
+          // if(projectUpdateRequest.goal) {
+          //   update.fields.goalDescription = projectUpdateRequest.goal;
+          // }
+          // if(projectUpdateRequest.habitsScheduleTemplate) {
+          //   update.fields.habitsScheduleTemplate = projectUpdateRequest.habitsScheduleTemplate;
+          // }
+
+          const result = await projects.updateOne(update);
+          if (result.status === Status.Updated) {
+            res.status(200).json(project);
+          } else {
+            res
+              .status(500)
+              .json({
+                error:
+                  "Project update request did not result in an updated status.",
+              });
+          }
+        }
+      } catch (ex) {
+        console.error(ex);
+        res
+          .status(500)
+          .json({
+            error: "Unexpected server error in PATCH /api/va/project/[id]",
+          });
+      }
+    }
+  )
+  .get(
+    "/api/v1/projects/:id",
+    async (req, res: NextApiResponse<ProjectValues | { error: string }>) => {
+      // TODO: ensure that the current session user has permission to view the project
+      // 1. owner 2. champion 3. an admin
+
+      try {
+        const id = req.params!.id;
+
+        const projects = tigrisDb.getCollection<Project>(Project);
+        const project = await projects.findOne({ filter: { id } });
+
+        if (project) {
+          // TODO: get the owner, champion, and admins for the project
+          const projectValues = new ProjectValues({
             id: project.id,
-          },
-          fields: {
-            name: projectUpdateRequest.name,
-            goalDescription: projectUpdateRequest.goal,
-            habitsScheduleTemplate: projectUpdateRequest.habitsScheduleTemplate,
-          },
-        };
+            goal: project.goalDescription,
+            name: project.name,
+          });
 
-        // It would be nice to be able to more explicitly edit fields.
-        // Instead we rely on fields being undefined or Arrays being empty
-        // in order for a field not be edited.
-        // if(projectUpdateRequest.name) {
-        //   update.fields.name = projectUpdateRequest.name;
-        // }
-        // if(projectUpdateRequest.goal) {
-        //   update.fields.goalDescription = projectUpdateRequest.goal;
-        // }
-        // if(projectUpdateRequest.habitsScheduleTemplate) {
-        //   update.fields.habitsScheduleTemplate = projectUpdateRequest.habitsScheduleTemplate;
-        // }
+          const usersCollection = tigrisDb.getCollection<User>(User);
+          const query: FindQuery<User> = {
+            filter: {
+              op: LogicalOperator.OR,
+              selectorFilters: [
+                { id: project.ownerId },
+                { id: project.championId },
+                ...project.adminIds.map((id) => {
+                  return { id };
+                }),
+              ],
+            },
+          };
 
-        const result = await projects.updateOne(update);
-        if (result.status === Status.Updated) {
-          res.status(200).json(project);
+          const usersCursor = usersCollection.findMany(query);
+          const users = await usersCursor.toArray();
+          projectValues.champion = users.find(
+            (u) => u.id === project.championId
+          )!.email;
+          projectValues.owner = users.find(
+            (u) => u.id === project.ownerId
+          )!.email;
+          projectValues.adminEmails = users
+            .filter((u) => project.adminIds.includes(u.id!))
+            .map((u) => u.email);
+          projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
+
+          res.status(200).json(projectValues);
+        } else {
+          res.status(404).json({ error: `Project with id "${id}" not found` });
         }
-        else {
-          res.status(500).json({ error: "Project update request did not result in an updated status." })
-        }
+      } catch (ex) {
+        console.error(ex);
+        res
+          .status(500)
+          .json({
+            error: "Unexpected server error in POST /api/va/project/[id]",
+          });
       }
     }
-    catch (ex) {
-      console.error(ex)
-      res.status(500).json({ error: "Unexpected server error in PATCH /api/va/project/[id]" })
-    }
-  })
-  .get("/api/v1/projects/:id", async (req, res: NextApiResponse<ProjectValues | { error: string }>) => {
-    // TODO: ensure that the current session user has permission to view the project
-    // 1. owner 2. champion 3. an admin
-
-    try {
-      const id = req.params!.id;
-
-      const projects = tigrisDb.getCollection<Project>(Project);
-      const project = await projects.findOne({ filter: { id } });
-
-      if (project) {
-        // TODO: get the owner, champion, and admins for the project
-        const projectValues = new ProjectValues({ id: project.id, goal: project.goalDescription, name: project.name });
-
-        const usersCollection = tigrisDb.getCollection<User>(User);
-        const query: FindQuery<User> = {
-          filter: {
-            op: LogicalOperator.OR,
-            selectorFilters: [
-              { id: project.ownerId },
-              { id: project.championId },
-              ...project.adminIds.map(id => { return { id } })
-            ],
-          },
-        };
-
-        const usersCursor = usersCollection.findMany(query);
-        const users = await usersCursor.toArray();
-        projectValues.champion = users.find(u => u.id === project.championId)!.email;
-        projectValues.owner = users.find(u => u.id === project.ownerId)!.email;
-        projectValues.adminEmails = users.filter(
-          u => project.adminIds.includes(u.id!)
-        ).map(u => u.email);
-        projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
-
-        res.status(200).json(projectValues);
-      }
-      else {
-        res.status(404).json({ error: `Project with id "${id}" not found` });
-      }
-    }
-    catch (ex) {
-      console.error(ex)
-      res.status(500).json({ error: "Unexpected server error in POST /api/va/project/[id]" })
-    }
-  })
+  )
   .post("/api/v1/projects", async (req, res) => {
-    const session = await getServerSession(req, res, authOptions)
+    const session = await getServerSession(req, res, authOptions);
     const projectCreationRequest = req.body as ProjectValues;
 
-    if (projectCreationRequest.owner !== session?.user.email) {
-      res.status(403).json({ error: "The provided owner email does not match the current logged in user" });
+    if (!session || projectCreationRequest.owner !== session?.user.email) {
+      res
+        .status(403)
+        .json({
+          error:
+            "The provided owner email does not match the current logged in user",
+        });
       return;
     }
 
     try {
       const users = tigrisDb.getCollection<User>(User);
 
-      let owner = await users.findOne({ filter: { email: projectCreationRequest.owner } });
+      let owner = await users.findOne({
+        filter: { email: projectCreationRequest.owner },
+      });
       if (!owner) {
         owner = await users.insertOne({
           name: session.user.name || "",
@@ -183,14 +235,14 @@ router
         // TODO: create user at signup
         // res.status(404).json({ error: "The owner could not be found." });
         // return
-      }
-      else {
+      } else {
         console.log("Owner already exists.", owner);
       }
 
-      let champion = await users.findOne({ filter: { email: projectCreationRequest.champion } });
+      let champion = await users.findOne({
+        filter: { email: projectCreationRequest.champion },
+      });
       if (!champion) {
-
         champion = await users.insertOne({
           name: "",
           email: projectCreationRequest.champion!,
@@ -200,9 +252,8 @@ router
         console.log("New user created for owner", champion);
         // TODO: should the champion be created if they don't exist? Probably!
         // res.status(404).json({ error: "The champion could not be found." });
-      }
-      else {
-        console.log('Champion already exists.', champion)
+      } else {
+        console.log("Champion already exists.", champion);
       }
 
       const creationDate = new Date();
@@ -216,10 +267,9 @@ router
         startDate: creationDate,
       });
 
-      res.status(201).json(insertedProject)
-    }
-    catch (ex) {
-      console.error(ex)
+      res.status(201).json(insertedProject);
+    } catch (ex) {
+      console.error(ex);
 
       res.status(500).json({ error: "unexpected server error" });
     }

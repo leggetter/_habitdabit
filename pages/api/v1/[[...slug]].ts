@@ -82,12 +82,10 @@ router
           });
 
           if (owner?.email !== session?.user.email) {
-            res
-              .status(403)
-              .json({
-                error:
-                  "The logged in user does not have permission to edit the project",
-              });
+            res.status(403).json({
+              error:
+                "The logged in user does not have permission to edit the project",
+            });
             return;
           }
           // You cannot edit the owner (for now)
@@ -123,21 +121,17 @@ router
           if (result.status === Status.Updated) {
             res.status(200).json(project);
           } else {
-            res
-              .status(500)
-              .json({
-                error:
-                  "Project update request did not result in an updated status.",
-              });
+            res.status(500).json({
+              error:
+                "Project update request did not result in an updated status.",
+            });
           }
         }
       } catch (ex) {
         console.error(ex);
-        res
-          .status(500)
-          .json({
-            error: "Unexpected server error in PATCH /api/va/project/[id]",
-          });
+        res.status(500).json({
+          error: "Unexpected server error in PATCH /api/va/project/[id]",
+        });
       }
     }
   )
@@ -183,9 +177,13 @@ router
           projectValues.owner = users.find(
             (u) => u.id === project.ownerId
           )!.email;
-          projectValues.adminEmails = users
-            .filter((u) => project.adminIds.includes(u.id!))
-            .map((u) => u.email);
+          projectValues.adminEmails = [
+            ...new Set(
+              users
+                .filter((u) => project.adminIds.includes(u.id!))
+                .map((u) => u.email)
+            ),
+          ];
           projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
 
           res.status(200).json(projectValues);
@@ -194,11 +192,9 @@ router
         }
       } catch (ex) {
         console.error(ex);
-        res
-          .status(500)
-          .json({
-            error: "Unexpected server error in POST /api/va/project/[id]",
-          });
+        res.status(500).json({
+          error: "Unexpected server error in POST /api/va/project/[id]",
+        });
       }
     }
   )
@@ -207,12 +203,10 @@ router
     const projectCreationRequest = req.body as ProjectValues;
 
     if (!session || projectCreationRequest.owner !== session?.user.email) {
-      res
-        .status(403)
-        .json({
-          error:
-            "The provided owner email does not match the current logged in user",
-        });
+      res.status(403).json({
+        error:
+          "The provided owner email does not match the current logged in user",
+      });
       return;
     }
 

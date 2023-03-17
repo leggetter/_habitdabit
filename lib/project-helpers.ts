@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import { useState } from "react";
-import { Project, IWeeklyHabitTemplate } from "../db/models/project";
+import {
+  Project,
+  IWeeklyHabitTemplate,
+  IWeeklyHabitSchedule,
+} from "../db/models/project";
 
 export class ProjectValues {
   public id?: number;
@@ -10,9 +14,7 @@ export class ProjectValues {
   public champion: string | undefined;
   public adminEmails: string[] | undefined;
   public habitsScheduleTemplate: IWeeklyHabitTemplate | undefined;
-  // public scheduledHabits: IScheduledHabits = {
-  //   habits: [],
-  // };
+  public weeklySchedules: IWeeklyHabitSchedule[] | undefined;
 
   public constructor(init?: Partial<ProjectValues>) {
     Object.assign(this, init);
@@ -52,7 +54,7 @@ export function useProjects(search: string) {
     getProjects(search);
   }, [search]);
 
-  return { projects, error, isLoading }
+  return { projects, error, isLoading };
 }
 
 export function useProject(id: string) {
@@ -86,8 +88,8 @@ export function useProject(id: string) {
     getProject();
   }, [id]);
 
-  return { project, error, isLoading }
-};
+  return { project, error, isLoading };
+}
 
 export const deepCopy = (obj: any) => {
   return JSON.parse(JSON.stringify(obj));

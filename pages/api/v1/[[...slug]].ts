@@ -148,7 +148,6 @@ router
         const project = await projects.findOne({ filter: { id } });
 
         if (project) {
-          // TODO: get the owner, champion, and admins for the project
           const projectValues = new ProjectValues({
             id: project.id,
             goal: project.goalDescription,

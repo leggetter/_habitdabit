@@ -30,6 +30,7 @@ import {
 } from "db/models/project";
 import React, { useEffect, useState } from "react";
 import { ConfirmDialog } from "components/confirm-dialog";
+import { createWeeklyTemplate, DAYS_OF_WEEK } from "lib/habit-helpers";
 
 function DayOfWeekListing({
   day,
@@ -93,52 +94,6 @@ function DayOfWeekListing({
     </Box>
   );
 }
-
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const createWeeklyTemplate = (): IWeeklyHabitTemplate => {
-  const template: IWeeklyHabitTemplate = {
-    days: [
-      // monday
-      {
-        habits: [],
-      },
-      // tuesday
-      {
-        habits: [],
-      },
-      // wednesday
-      {
-        habits: [],
-      },
-      // thursday
-      {
-        habits: [],
-      },
-      // friday
-      {
-        habits: [],
-      },
-      // saturday
-      {
-        habits: [],
-      },
-      // sunday
-      {
-        habits: [],
-      },
-    ],
-  };
-  return template;
-};
 
 export default function TemplatePage() {
   const router = useRouter();

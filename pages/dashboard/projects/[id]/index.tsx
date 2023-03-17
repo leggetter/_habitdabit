@@ -12,6 +12,7 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   Box,
+  Text,
 } from "@chakra-ui/react";
 import { ProjectValues, useProject } from "../../../../lib/project-helpers";
 import EditButton from "../../../../components/projects/edit-button";
@@ -54,6 +55,24 @@ const ProjectTable = ({ project }: { project: ProjectValues }) => {
                 >
                   {project.habitsScheduleTemplate ? "View" : "Create"}
                 </HDLinkButton>
+              </Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Weekly schedules</b>
+              </Td>
+              <Td>
+                {project.habitsScheduleTemplate && (
+                  <HDLinkButton
+                    ml={2}
+                    href={`/dashboard/projects/${project.id}/schedule`}
+                  >
+                    View
+                  </HDLinkButton>
+                )}
+                {!project.habitsScheduleTemplate && (
+                  <Text>Create a Habit schedule template first</Text>
+                )}
               </Td>
             </Tr>
             <Tr>

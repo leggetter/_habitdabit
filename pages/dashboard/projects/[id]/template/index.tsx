@@ -272,9 +272,16 @@ export default function TemplatePage() {
     setSaving(false);
   };
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <p>⏲️ Loading...</p>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      {isLoading && <p>⏲️ Loading...</p>}
       {errors.length > 0 && (
         <p>
           {errors.map((e) => {

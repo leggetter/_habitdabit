@@ -67,9 +67,11 @@ const singleHabitTemplatesToSingleHabitScheduledHabits = (
 };
 
 export const createWeeklySchedule = (
+  week: Date,
   habitsScheduleTemplate: IWeeklyHabitTemplate
 ): IWeeklyHabitSchedule => {
   const schedule: IWeeklyHabitSchedule = {
+    weekStartDate: week,
     days: new Array<IDailyHabitSchedule>(7),
   };
 

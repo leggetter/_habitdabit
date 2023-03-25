@@ -101,8 +101,11 @@ router
               goalDescription: projectUpdateRequest.goal,
               habitsScheduleTemplate:
                 projectUpdateRequest.habitsScheduleTemplate,
+              weeklyHabitSchedules: projectUpdateRequest.weeklySchedules,
             },
           };
+
+          console.log(JSON.stringify(update.fields, null, 2));
 
           // It would be nice to be able to more explicitly edit fields.
           // Instead we rely on fields being undefined or Arrays being empty
@@ -119,6 +122,7 @@ router
 
           const result = await projects.updateOne(update);
           if (result.status === Status.Updated) {
+            console.log(result.modifiedCount);
             res.status(200).json(project);
           } else {
             res.status(500).json({
@@ -184,6 +188,7 @@ router
             ),
           ];
           projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
+          projectValues.weeklySchedules = project.weeklyHabitSchedules;
 
           res.status(200).json(projectValues);
         } else {

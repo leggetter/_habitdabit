@@ -59,9 +59,9 @@ export interface IWeeklyHabitSchedule {
 
   /*
    * An Array that should have 7 elements (0 - 6) for each day of the week.
-   * Each element should be an Array<DailyHabitSchedule>
+   * Each element should be an Array<IDailyHabitSchedule>
    */
-  days?: Array<DailyHabitSchedule>;
+  days?: Array<IDailyHabitSchedule>;
 }
 
 class WeeklyHabitSchedule implements IWeeklyHabitSchedule {
@@ -101,6 +101,6 @@ export class Project {
   @Field()
   habitsScheduleTemplate?: WeeklyHabitTemplate;
 
-  @Field(TigrisDataTypes.OBJECT, { elements: WeeklyHabitSchedule })
+  @Field({ elements: WeeklyHabitSchedule })
   weeklyHabitSchedules?: WeeklyHabitSchedule[];
 }

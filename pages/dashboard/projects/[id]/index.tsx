@@ -1,41 +1,89 @@
-import { Heading } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import Layout from "../../../../components/layout";
 
-import { Table, Tbody, Tr, Td, TableContainer } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { Project } from "../../../../db/models/project";
+import {
+  Heading,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  TableContainer,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Box,
+  Text,
+} from "@chakra-ui/react";
+import { ProjectValues, useProject } from "../../../../lib/project-helpers";
+import EditButton from "../../../../components/projects/edit-button";
+import HDLinkButton from "../../../../components/hd-link-button";
 
-const ProjectTable = ({ project }: { project: Project }) => {
+const ProjectTable = ({ project }: { project: ProjectValues }) => {
   return (
     <>
-      <Heading>Project: {project?.name}</Heading>
+      <Heading>Project: {project.name}</Heading>
 
-      <TableContainer maxW={800}>
+      <TableContainer maxW={800} wordBreak="normal" whiteSpace="normal">
         <Table variant="striped" colorScheme="teal">
           <Tbody>
             <Tr>
               <Td>
                 <b>Goal</b>
               </Td>
-              <Td>{project?.goalDescription}</Td>
+              <Td>{project.goal}</Td>
             </Tr>
             <Tr>
               <Td>
                 <b>Champion</b>
               </Td>
-              <Td>{project?.championId}</Td>
+              <Td>{project.champion}</Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Owner</b>
+              </Td>
+              <Td>{project.owner}</Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Habit schedule template</b>
+              </Td>
+              <Td>
+                <HDLinkButton
+                  ml={2}
+                  href={`/dashboard/projects/${project.id}/template`}
+                >
+                  {project.habitsScheduleTemplate ? "View" : "Create"}
+                </HDLinkButton>
+              </Td>
+            </Tr>
+            <Tr>
+              <Td>
+                <b>Weekly schedules</b>
+              </Td>
+              <Td>
+                {project.habitsScheduleTemplate && (
+                  <HDLinkButton
+                    ml={2}
+                    href={`/dashboard/projects/${project.id}/schedule`}
+                  >
+                    View
+                  </HDLinkButton>
+                )}
+                {!project.habitsScheduleTemplate && (
+                  <Text>Create a Habit schedule template first</Text>
+                )}
+              </Td>
             </Tr>
             <Tr>
               <Td>
                 <b>Admins</b>
               </Td>
               <Td>
-                {project?.adminIds.map((adminId) => {
-                  return (
-                    <span key={adminId.toString()}>{adminId.toString()}</span>
-                  );
-                })}
+                {project.adminEmails &&
+                  project.adminEmails.map((email) => {
+                    return <span key={email}>{email}</span>;
+                  })}
               </Td>
             </Tr>
           </Tbody>
@@ -45,39 +93,10 @@ const ProjectTable = ({ project }: { project: Project }) => {
   );
 };
 
-export default function PostPage() {
+export default function ProjectPage() {
   const router = useRouter();
 
-  const [project, setProject] = useState<Project>();
-  const [isLoading, setLoading] = useState(false);
-  const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    const getProject = async () => {
-      setLoading(true);
-
-      const id = parseInt(router.query.id as string) as number;
-      if (!id) return;
-
-      try {
-        const result = await fetch(`/api/v1/projects/${id}`);
-
-        const projectResult = await result.json();
-        if (projectResult.status === 200) {
-          setProject(projectResult);
-        } else {
-          setError(projectResult.error);
-        }
-      } catch (ex) {
-        console.error(ex);
-        setError("An error occurred when fetching the project information.");
-      }
-
-      setLoading(false);
-    };
-
-    getProject();
-  }, [router]);
+  const { project, error, isLoading } = useProject(router.query.id as string);
 
   return (
     <Layout>
@@ -86,7 +105,30 @@ export default function PostPage() {
       {!error && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}
-      {project && <ProjectTable project={project} />}
+      <Breadcrumb mb={5}>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/dashboard">🏠 Dashboard</BreadcrumbLink>
+        </BreadcrumbItem>
+
+        <BreadcrumbItem>
+          <BreadcrumbLink
+            href={`/dashboard/projects/${project?.id}`}
+            isCurrentPage
+          >
+            {project?.name}
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumb>
+
+      {project && (
+        <>
+          <ProjectTable project={project} />
+
+          <Box mt={5}>
+            <EditButton id={project.id!} />
+          </Box>
+        </>
+      )}
     </Layout>
   );
 }

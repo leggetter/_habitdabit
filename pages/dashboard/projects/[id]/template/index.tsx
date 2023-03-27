@@ -284,8 +284,8 @@ export default function TemplatePage() {
     <Layout>
       {errors.length > 0 && (
         <p>
-          {errors.map((e) => {
-            return <p>{e}</p>;
+          {errors.map((e, index) => {
+            return <p key={`error_${index}`}>{e}</p>;
           })}
         </p>
       )}

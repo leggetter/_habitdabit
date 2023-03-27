@@ -20,6 +20,7 @@ import {
   IWeeklyHabitSchedule,
   Project,
 } from "db/models/project";
+import { useSession } from "next-auth/react";
 
 const calculateTotalValue = (weeklySchedule: IWeeklyHabitSchedule) => {
   let totalValue = 0;
@@ -37,6 +38,7 @@ function DayOfWeekListing({
   day,
   habits,
   habitCompletedChanged,
+  canEdit,
 }: {
   day: string;
   habits: Array<ISingleScheduledHabit>;
@@ -45,6 +47,7 @@ function DayOfWeekListing({
     habitIndex: number,
     habitCompleted: boolean
   ) => void;
+  canEdit: boolean;
 }) {
   return (
     <Box mb={10} width={600}>
@@ -67,20 +70,57 @@ function DayOfWeekListing({
             <Box width={200} pr={5} textAlign="right">
               {habit.value}
             </Box>
-            <Box>
-              <Checkbox
-                isChecked={habit.completed}
-                onChange={(event) => {
-                  habitCompletedChanged(day, index, event.target.checked);
-                }}
-              />
-            </Box>
+            {canEdit && (
+              <Box>
+                <Checkbox
+                  isChecked={habit.completed}
+                  onChange={(event) => {
+                    habitCompletedChanged(day, index, event.target.checked);
+                  }}
+                />
+              </Box>
+            )}
           </HStack>
         );
       })}
     </Box>
   );
 }
+
+const findWeeklyScheduleIndex = (
+  project: ProjectValues,
+  week: Date
+): number => {
+  const weekIndex = project?.weeklySchedules?.findIndex((schedule) => {
+    if (typeof schedule.weekStartDate === "string") {
+      // workaround https://github.com/tigrisdata/tigris-client-ts/issues/227
+      schedule.weekStartDate = new Date(schedule.weekStartDate);
+    }
+    return schedule.weekStartDate?.getTime() === week?.getTime();
+  });
+
+  return weekIndex !== undefined ? weekIndex : -1;
+};
+
+const findWeeklySchedule = (
+  project: ProjectValues,
+  week: Date
+): undefined | IWeeklyHabitSchedule => {
+  if (!project.weeklySchedules) {
+    return undefined;
+  }
+  let currentWeek = project.weeklySchedules.find((schedule) => {
+    if (typeof schedule.weekStartDate === "string") {
+      // workaround https://github.com/tigrisdata/tigris-client-ts/issues/227
+      schedule.weekStartDate = new Date(schedule.weekStartDate);
+    }
+    return (
+      schedule.weekStartDate &&
+      schedule.weekStartDate.getTime() === week.getTime()
+    );
+  });
+  return currentWeek;
+};
 
 export default function SchedulePage() {
   const router = useRouter();
@@ -95,6 +135,7 @@ export default function SchedulePage() {
   const [weeklySchedule, setWeeklySchedule] = useState<
     IWeeklyHabitSchedule | undefined
   >();
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (router.query.week) {
@@ -110,16 +151,8 @@ export default function SchedulePage() {
         project.weeklySchedules = [];
       }
 
-      let currentWeek = project.weeklySchedules.find((schedule) => {
-        if (typeof schedule.weekStartDate === "string") {
-          // workaround https://github.com/tigrisdata/tigris-client-ts/issues/227
-          schedule.weekStartDate = new Date(schedule.weekStartDate);
-        }
-        return (
-          schedule.weekStartDate &&
-          schedule.weekStartDate.getTime() === week.getTime()
-        );
-      });
+      let currentWeek = findWeeklySchedule(project, week);
+
       if (!currentWeek && project.habitsScheduleTemplate) {
         console.log("Creating weekly schedule");
         currentWeek = createWeeklySchedule(
@@ -178,13 +211,7 @@ export default function SchedulePage() {
       deepCopy(weeklySchedule);
     setWeeklySchedule(updatedWeeklySchedule);
 
-    const weekIndex = project?.weeklySchedules?.findIndex((schedule) => {
-      if (typeof schedule.weekStartDate === "string") {
-        // workaround https://github.com/tigrisdata/tigris-client-ts/issues/227
-        schedule.weekStartDate = new Date(schedule.weekStartDate);
-      }
-      return schedule.weekStartDate?.getTime() === week?.getTime();
-    });
+    const weekIndex = findWeeklyScheduleIndex(project!, week!);
 
     if (weekIndex === -1) {
       setErrors((prev) => [
@@ -200,6 +227,18 @@ export default function SchedulePage() {
         setErrors((prev) => [...prev, `Error saving: ${err.toString()}`]);
       }
     }
+  };
+
+  const resetSchedule = () => {
+    const currentWeek = createWeeklySchedule(
+      week!,
+      project!.habitsScheduleTemplate!
+    );
+    const weekIndex = findWeeklyScheduleIndex(project!, week!);
+    project!.weeklySchedules![weekIndex] = currentWeek;
+    setWeeklySchedule(currentWeek);
+
+    saveWeeklySchedules(project!.weeklySchedules!);
   };
 
   if (isLoading) {
@@ -293,11 +332,20 @@ export default function SchedulePage() {
                   day={day}
                   habits={weeklySchedule.days![index].habits!}
                   habitCompletedChanged={handleHabitCompletedChange}
+                  canEdit={
+                    project?.adminEmails?.includes(session?.user!.email!) ===
+                    true
+                  }
                 />
               ))}
             </Box>
             <Box mb={5}>Total potential value: {totalValue}</Box>
             <Box mb={5}>Total completed value: {completedValue}</Box>
+            <Box>
+              <Button colorScheme="red" onClick={resetSchedule}>
+                Reset schedule
+              </Button>
+            </Box>
           </>
         )}
       </Box>

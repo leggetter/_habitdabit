@@ -8,6 +8,7 @@
   "scripts": {
     "predev": "npm run setup",
     "dev": "next",
+    "prebuild": "npm run setup",
     "build": "next build",
     "start": "next start",
     "setup": "ts-node scripts/setup.ts",

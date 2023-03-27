@@ -127,7 +127,8 @@ export default function Dashboard() {
           Create
         </HDLinkButton>
 
-        {projects?.length === 0 && <Text>No projects found</Text>}
+        {isLoading && <Text mt={10}>⏲️ Loading...</Text>}
+        {!isLoading && projects?.length === 0 && <Text>No projects found</Text>}
         {projects?.length > 0 && (
           <ProjectsList isAdmin={isAdmin} projects={projects} />
         )}

@@ -48,7 +48,7 @@ function DayOfWeekListing({
   ) => void;
 }) {
   return (
-    <Box mb={10} width={600}>
+    <Box mb={10} width={{ m: "100%", lg: 600 }}>
       <Heading as="h3" size="lg">
         {day}
       </Heading>

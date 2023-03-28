@@ -11,8 +11,8 @@ export default function CreateProject() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const handleSubmissionComplete = (project: Project) => {
-    router.push(`/dashboard/projects/${project.id}`);
+  const handleSubmissionComplete = async (project: Project): Promise<void> => {
+    await router.push(`/dashboard/projects/${project.id}`);
   };
 
   if (!session) {

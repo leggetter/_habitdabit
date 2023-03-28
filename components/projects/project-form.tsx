@@ -17,7 +17,7 @@ interface ProjectFormProps {
   action: string;
   method: "POST" | "PATCH";
   project?: ProjectValues;
-  onSubmitComplete: (project: Project) => void;
+  onSubmitComplete: (project: Project) => Promise<void>;
   championReadonly?: boolean;
 }
 
@@ -28,7 +28,11 @@ export default function ProjectForm({
   onSubmitComplete,
   championReadonly = false,
 }: ProjectFormProps) {
-  const projectValues = project ?? new ProjectValues();
+  const projectValues = new ProjectValues(project);
+  if (projectValues.name === undefined) projectValues.name = "";
+  if (projectValues.champion === undefined) projectValues.champion = "";
+
+  console.log(project);
 
   return (
     <Box as="section" mt={10}>
@@ -39,6 +43,8 @@ export default function ProjectForm({
             values: ProjectValues,
             { setSubmitting }: FormikHelpers<ProjectValues>
           ) => {
+            setSubmitting(true);
+
             const params: RequestInit = {
               headers: {
                 "Content-Type": "application/json",
@@ -50,69 +56,76 @@ export default function ProjectForm({
             try {
               const response = await fetch(action, params);
               const body = (await response.json()) as Project;
-              onSubmitComplete(body);
+              await onSubmitComplete(body);
+              setSubmitting(false);
             } catch (err) {
               // TODO: have some form-level errors
               console.error(err);
+              setSubmitting(false);
             }
-
-            setSubmitting(false);
           }}
         >
-          <Form>
-            <Field id="name" name="name">
-              {({ field, form }: { field: any; form: any }) => (
-                <FormControl isRequired mb={5}>
-                  <FormLabel>Name</FormLabel>
-                  <Input {...field} type="text" />
-                  <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
+          {(props) => (
+            <Form>
+              <Field id="name" name="name">
+                {({ field, form }: { field: any; form: any }) => (
+                  <FormControl isRequired mb={5}>
+                    <FormLabel>Name</FormLabel>
+                    <Input {...field} type="text" />
+                    <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
 
-            <Field id="goal" name="goal">
-              {({ field, form }: { field: any; form: any }) => (
-                <FormControl id="goal" isRequired mb={5}>
-                  <FormLabel>Goal</FormLabel>
-                  <Textarea {...field} />
-                  <FormErrorMessage>{form.errors.goal}</FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
+              <Field id="goal" name="goal">
+                {({ field, form }: { field: any; form: any }) => (
+                  <FormControl id="goal" isRequired mb={5}>
+                    <FormLabel>Goal</FormLabel>
+                    <Textarea {...field} />
+                    <FormErrorMessage>{form.errors.goal}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
 
-            <Field id="owner" name="owner">
-              {({ field, form }: { field: any; form: any }) => (
-                <FormControl isRequired mb={5}>
-                  <FormLabel>Owner</FormLabel>
-                  <Input {...field} type="email" isReadOnly />
-                  <FormHelperText>
-                    The person who creates the Project is the owner.
-                  </FormHelperText>
-                </FormControl>
-              )}
-            </Field>
+              <Field id="owner" name="owner">
+                {({ field, form }: { field: any; form: any }) => (
+                  <FormControl isRequired mb={5}>
+                    <FormLabel>Owner</FormLabel>
+                    <Input {...field} type="email" isReadOnly />
+                    <FormHelperText>
+                      The person who creates the Project is the owner.
+                    </FormHelperText>
+                  </FormControl>
+                )}
+              </Field>
 
-            <Field id="champion" name="champion">
-              {({ field, form }: { field: any; form: any }) => (
-                <FormControl
-                  id="champion"
-                  isRequired
-                  isReadOnly={championReadonly}
-                  mb={5}
+              <Field id="champion" name="champion">
+                {({ field, form }: { field: any; form: any }) => (
+                  <FormControl
+                    id="champion"
+                    isRequired
+                    isReadOnly={championReadonly}
+                    mb={5}
+                  >
+                    <FormLabel>Champion</FormLabel>
+                    <Input {...field} type="email" />
+                    <FormErrorMessage>{form.errors.champion}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
+
+              <FormControl textAlign="right">
+                <Button
+                  variant="solid"
+                  colorScheme="blue"
+                  type="submit"
+                  isLoading={props.isSubmitting}
                 >
-                  <FormLabel>Champion</FormLabel>
-                  <Input {...field} type="email" />
-                  <FormErrorMessage>{form.errors.champion}</FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
-
-            <FormControl textAlign="right">
-              <Button variant="solid" colorScheme="blue" type="submit">
-                Submit
-              </Button>
-            </FormControl>
-          </Form>
+                  Submit
+                </Button>
+              </FormControl>
+            </Form>
+          )}
         </Formik>
       </VStack>
     </Box>

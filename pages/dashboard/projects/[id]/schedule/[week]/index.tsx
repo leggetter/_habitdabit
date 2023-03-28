@@ -50,7 +50,7 @@ function DayOfWeekListing({
   canEdit: boolean;
 }) {
   return (
-    <Box mb={10} width={600}>
+    <Box mb={10} width={{ md: "100%", lg: 600 }}>
       <Heading as="h3" size="lg">
         {day}
       </Heading>
@@ -292,7 +292,7 @@ export default function SchedulePage() {
           <BreadcrumbLink
             href={`/dashboard/projects/${project?.id}/schedule/${router.query.week}`}
           >
-            {week && DateTime.fromJSDate(week).toFormat("EEEE MM MMMM yyyy")}
+            {week && DateTime.fromJSDate(week).toFormat("EEEE dd MMMM yyyy")}
           </BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
@@ -300,7 +300,7 @@ export default function SchedulePage() {
       <Box as="section" mt={10}>
         <Heading as="h1">
           Habits for{" "}
-          {week && DateTime.fromJSDate(week).toFormat("EEEE MM MMMM yyyy")}
+          {week && DateTime.fromJSDate(week).toFormat("EEEE dd MMMM yyyy")}
         </Heading>
 
         {project && !project.habitsScheduleTemplate && (

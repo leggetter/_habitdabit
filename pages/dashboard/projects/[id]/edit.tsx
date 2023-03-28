@@ -15,9 +15,9 @@ export default function PostPage() {
 
   const { project, error, isLoading } = useProject(router.query.id as string);
 
-  const handleSubmissionComplete = (project: Project) => {
+  const handleSubmissionComplete = async (project: Project) => {
     // TODO: handle submission problems. Should this be a success callback only?
-    router.push(`/dashboard/projects/${project.id}`);
+    await router.push(`/dashboard/projects/${project.id}`);
   };
 
   return (

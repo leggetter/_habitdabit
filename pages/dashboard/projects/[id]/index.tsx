@@ -79,12 +79,7 @@ const ProjectTable = ({ project }: { project: ProjectValues }) => {
               <Td>
                 <b>Admins</b>
               </Td>
-              <Td>
-                {project.adminEmails &&
-                  project.adminEmails.map((email) => {
-                    return <span key={email}>{email}</span>;
-                  })}
-              </Td>
+              <Td>{project.adminEmails?.join(", ")}</Td>
             </Tr>
           </Tbody>
         </Table>

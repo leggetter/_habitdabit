@@ -9,7 +9,8 @@ import {
   Textarea,
   VStack,
 } from "@chakra-ui/react";
-import { Field, Form, Formik, FormikHelpers } from "formik";
+import { Field, Form, Formik, FormikHelpers, useFormikContext } from "formik";
+import { useState } from "react";
 import { Project } from "../../db/models/project";
 import { ProjectValues } from "../../lib/project-helpers";
 
@@ -21,6 +22,64 @@ interface ProjectFormProps {
   championReadonly?: boolean;
 }
 
+const AdminEmails = () => {
+  const { values, setFieldValue } = useFormikContext<ProjectValues>();
+
+  const addAdminEmail = () => {
+    values.adminEmails!.push("");
+    setFieldValue("adminEmails", values.adminEmails);
+  };
+
+  const removeAdminEmail = (index: number) => {
+    values.adminEmails!.splice(index, 1);
+    setFieldValue("adminEmails", values.adminEmails);
+  };
+  return (
+    <Box>
+      <FormLabel>Admins</FormLabel>
+      {values.adminEmails?.map((value, i) => {
+        return (
+          <Box key={`adminEmails_${i}`}>
+            <Field id={`adminEmails[${i}]`} name={`adminEmails[${i}]`}>
+              {({ field, form }: { field: any; form: any }) => (
+                <FormControl isRequired mb={5}>
+                  <Box display="flex" flexDirection="row">
+                    <Input {...field} type="email" />
+                    {/* <FormHelperText>
+                          The administrators of the project.
+                        </FormHelperText> */}
+                    <Button
+                      ml={5}
+                      onClick={() => {
+                        removeAdminEmail(i);
+                      }}
+                    >
+                      -
+                    </Button>
+                  </Box>
+                </FormControl>
+              )}
+            </Field>
+
+            {values.adminEmails === undefined ||
+              (i === values.adminEmails?.length - 1 && (
+                <Box display="flex" justifyContent="flex-end" mb={10}>
+                  <Button
+                    onClick={() => {
+                      addAdminEmail();
+                    }}
+                  >
+                    +
+                  </Button>
+                </Box>
+              ))}
+          </Box>
+        );
+      })}
+    </Box>
+  );
+};
+
 export default function ProjectForm({
   action,
   method,
@@ -28,17 +87,36 @@ export default function ProjectForm({
   onSubmitComplete,
   championReadonly = false,
 }: ProjectFormProps) {
-  const projectValues = new ProjectValues(project);
-  if (projectValues.name === undefined) projectValues.name = "";
-  if (projectValues.champion === undefined) projectValues.champion = "";
+  const _projectValues = new ProjectValues(project);
+  if (_projectValues.name === undefined) _projectValues.name = "";
+  if (_projectValues.champion === undefined) _projectValues.champion = "";
 
-  console.log(project);
+  const [projectValues, setProjectValues] =
+    useState<ProjectValues>(_projectValues);
+
+  const validateForm = (values: ProjectValues) => {
+    const errors: { name?: string; owner?: string; adminEmails?: string } = {};
+
+    // if(!values.adminEmails) {
+    //   errors.adminEmails = 'Required'
+    // }
+    // else {
+
+    // }
+
+    // if (!values.owner) {
+    //   errors.owner = 'Required';
+    // }
+
+    return errors;
+  };
 
   return (
     <Box as="section" mt={10}>
       <VStack maxW={600} spacing={5} align="stretch">
         <Formik
           initialValues={projectValues}
+          validate={validateForm}
           onSubmit={async (
             values: ProjectValues,
             { setSubmitting }: FormikHelpers<ProjectValues>
@@ -87,18 +165,6 @@ export default function ProjectForm({
                 )}
               </Field>
 
-              <Field id="owner" name="owner">
-                {({ field, form }: { field: any; form: any }) => (
-                  <FormControl isRequired mb={5}>
-                    <FormLabel>Owner</FormLabel>
-                    <Input {...field} type="email" isReadOnly />
-                    <FormHelperText>
-                      The person who creates the Project is the owner.
-                    </FormHelperText>
-                  </FormControl>
-                )}
-              </Field>
-
               <Field id="champion" name="champion">
                 {({ field, form }: { field: any; form: any }) => (
                   <FormControl
@@ -113,6 +179,20 @@ export default function ProjectForm({
                   </FormControl>
                 )}
               </Field>
+
+              <Field id="owner" name="owner">
+                {({ field, form }: { field: any; form: any }) => (
+                  <FormControl isRequired mb={5}>
+                    <FormLabel>Owner</FormLabel>
+                    <Input {...field} type="email" isReadOnly />
+                    <FormHelperText>
+                      The person who creates the Project is the owner.
+                    </FormHelperText>
+                  </FormControl>
+                )}
+              </Field>
+
+              <AdminEmails />
 
               <FormControl textAlign="right">
                 <Button

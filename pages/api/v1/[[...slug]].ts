@@ -11,6 +11,7 @@ import { ProjectValues } from "../../../lib/project-helpers";
 import {
   FindQuery,
   LogicalOperator,
+  SelectorFilterOperator,
   Status,
   UpdateQuery,
 } from "@tigrisdata/core";
@@ -92,6 +93,42 @@ router
           // so those values are not being changed
           const projectUpdateRequest = req.body as ProjectValues;
 
+          if (
+            !projectUpdateRequest.adminEmails ||
+            projectUpdateRequest.adminEmails.length === 0
+          ) {
+            res.status(400).json({
+              error: "At least one admin email must be set for a project",
+            });
+            return;
+          }
+
+          let adminEmailQuery = {} as FindQuery<User>;
+          if (
+            projectUpdateRequest.adminEmails &&
+            projectUpdateRequest.adminEmails.length === 1
+          ) {
+            adminEmailQuery.filter = {
+              email: projectUpdateRequest.adminEmails[0],
+            };
+          } else {
+            adminEmailQuery.filter = {
+              op: LogicalOperator.OR,
+              selectorFilters: projectUpdateRequest.adminEmails?.map(
+                (email) => {
+                  return {
+                    op: SelectorFilterOperator.EQ,
+                    fields: {
+                      email: email,
+                    },
+                  };
+                }
+              ),
+            };
+          }
+
+          const admins = await users.findMany(adminEmailQuery).toArray();
+
           const update: UpdateQuery<Project> = {
             filter: {
               id: project.id,
@@ -102,6 +139,9 @@ router
               habitsScheduleTemplate:
                 projectUpdateRequest.habitsScheduleTemplate,
               weeklyHabitSchedules: projectUpdateRequest.weeklySchedules,
+              adminIds: admins.map((user) => {
+                return user.id;
+              }),
             },
           };
 

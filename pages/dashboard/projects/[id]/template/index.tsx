@@ -30,7 +30,11 @@ import {
 } from "db/models/project";
 import React, { useEffect, useState } from "react";
 import { ConfirmDialog } from "components/confirm-dialog";
-import { createWeeklyTemplate, DAYS_OF_WEEK } from "lib/habit-helpers";
+import {
+  createWeeklyTemplate,
+  DAYS_OF_WEEK,
+  ensureWeekOfHabits,
+} from "lib/habit-helpers";
 
 function DayOfWeekListing({
   day,
@@ -48,7 +52,7 @@ function DayOfWeekListing({
   ) => void;
 }) {
   return (
-    <Box mb={10} width={{ m: "100%", lg: 600 }}>
+    <Box mb={10} width={{ base: "100%", md: 600 }}>
       <Heading as="h3" size="lg">
         {day}
       </Heading>
@@ -57,9 +61,10 @@ function DayOfWeekListing({
         return (
           <HStack
             key={`${day}_habit_${index}`}
-            align="stretch"
-            alignContent="center"
-            justifyContent="center"
+            align="left"
+            alignContent="left"
+            justifyContent="left"
+            alignItems="center"
             mt={2}
           >
             <Box width={400} mr={5}>
@@ -81,7 +86,7 @@ function DayOfWeekListing({
           </HStack>
         );
       })}
-      <Box mt={2} textAlign="right">
+      <Box width={{ base: "100%", md: "600px" }} mt={2} textAlign="right">
         <Button
           title="Add new habit"
           onClick={() => {
@@ -106,7 +111,9 @@ export default function TemplatePage() {
     isLoading,
   } = useProject(router.query.id as string);
   const [weeklySchedule, setWeeklySchedule] = useState<IWeeklyHabitTemplate>(
-    project?.habitsScheduleTemplate || createWeeklyTemplate()
+    project?.habitsScheduleTemplate
+      ? ensureWeekOfHabits(project?.habitsScheduleTemplate)
+      : createWeeklyTemplate()
   );
 
   useEffect(() => {

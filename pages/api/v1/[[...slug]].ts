@@ -94,7 +94,7 @@ router
           const projectUpdateRequest = req.body as ProjectValues;
 
           if (
-            !projectUpdateRequest.adminEmails ||
+            projectUpdateRequest.adminEmails &&
             projectUpdateRequest.adminEmails.length === 0
           ) {
             res.status(400).json({
@@ -103,31 +103,37 @@ router
             return;
           }
 
-          let adminEmailQuery = {} as FindQuery<User>;
-          if (
-            projectUpdateRequest.adminEmails &&
-            projectUpdateRequest.adminEmails.length === 1
-          ) {
-            adminEmailQuery.filter = {
-              email: projectUpdateRequest.adminEmails[0],
-            };
-          } else {
-            adminEmailQuery.filter = {
-              op: LogicalOperator.OR,
-              selectorFilters: projectUpdateRequest.adminEmails?.map(
-                (email) => {
-                  return {
-                    op: SelectorFilterOperator.EQ,
-                    fields: {
-                      email: email,
-                    },
-                  };
-                }
-              ),
-            };
-          }
+          let adminIds = undefined;
+          if (projectUpdateRequest.adminEmails) {
+            let adminEmailQuery = {} as FindQuery<User>;
+            if (projectUpdateRequest.adminEmails.length === 1) {
+              adminEmailQuery.filter = {
+                email: projectUpdateRequest.adminEmails[0],
+              };
+            } else {
+              adminEmailQuery.filter = {
+                op: LogicalOperator.OR,
+                selectorFilters: projectUpdateRequest.adminEmails?.map(
+                  (email) => {
+                    return {
+                      op: SelectorFilterOperator.EQ,
+                      fields: {
+                        email: email,
+                      },
+                    };
+                  }
+                ),
+              };
+            }
 
-          const admins = await users.findMany(adminEmailQuery).toArray();
+            const admins = await users.findMany(adminEmailQuery).toArray();
+            adminIds =
+              admins.length > 0
+                ? admins.map((user) => {
+                    return user.id;
+                  })
+                : undefined;
+          }
 
           const update: UpdateQuery<Project> = {
             filter: {
@@ -139,9 +145,7 @@ router
               habitsScheduleTemplate:
                 projectUpdateRequest.habitsScheduleTemplate,
               weeklyHabitSchedules: projectUpdateRequest.weeklySchedules,
-              adminIds: admins.map((user) => {
-                return user.id;
-              }),
+              adminIds: adminIds,
             },
           };
 

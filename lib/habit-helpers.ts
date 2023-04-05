@@ -52,6 +52,17 @@ export const createWeeklyTemplate = (): IWeeklyHabitTemplate => {
   return template;
 };
 
+export const ensureWeekOfHabits = (schedule: IWeeklyHabitTemplate) => {
+  console.log(schedule);
+
+  for (let i = 0; i < 7; ++i) {
+    if (schedule.days[i] === undefined) {
+      schedule.days[i] = { habits: [] };
+    }
+  }
+  return schedule;
+};
+
 const singleHabitTemplatesToSingleHabitScheduledHabits = (
   habitTemplates: ISingleHabitTemplate[]
 ) => {
@@ -74,6 +85,8 @@ export const createWeeklySchedule = (
     weekStartDate: week,
     days: new Array<IDailyHabitSchedule>(7),
   };
+
+  habitsScheduleTemplate = ensureWeekOfHabits(habitsScheduleTemplate);
 
   habitsScheduleTemplate.days?.forEach((dayTemplate, index) => {
     schedule.days![index] = {

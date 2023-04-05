@@ -14,7 +14,11 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { DateTime } from "luxon";
-import { createWeeklySchedule, DAYS_OF_WEEK } from "lib/habit-helpers";
+import {
+  createWeeklySchedule,
+  DAYS_OF_WEEK,
+  ensureWeekOfHabits,
+} from "lib/habit-helpers";
 import {
   ISingleScheduledHabit,
   IWeeklyHabitSchedule,
@@ -154,6 +158,9 @@ export default function SchedulePage() {
       let currentWeek = findWeeklySchedule(project, week);
 
       if (!currentWeek && project.habitsScheduleTemplate) {
+        project.habitsScheduleTemplate = ensureWeekOfHabits(
+          project.habitsScheduleTemplate
+        );
         console.log("Creating weekly schedule");
         currentWeek = createWeeklySchedule(
           week,

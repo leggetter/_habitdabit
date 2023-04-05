@@ -53,8 +53,6 @@ export const createWeeklyTemplate = (): IWeeklyHabitTemplate => {
 };
 
 export const ensureWeekOfHabits = (schedule: IWeeklyHabitTemplate) => {
-  console.log(schedule);
-
   for (let i = 0; i < 7; ++i) {
     if (schedule.days[i] === undefined) {
       schedule.days[i] = { habits: [] };

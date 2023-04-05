@@ -34,6 +34,8 @@ import {
   HabitDescriptionChangedEvent,
   HabitValueChangedEvent,
   DayOfWeekListing,
+  HabitMoveEvent,
+  HabitMoveDirection,
 } from "components/days-of-week-listing";
 
 export default function TemplatePage() {
@@ -259,6 +261,42 @@ export default function TemplatePage() {
     setEdited(true);
   };
 
+  const handleMoveRequest = ({
+    day,
+    habitIndex,
+    direction,
+  }: HabitMoveEvent) => {
+    const dayIndex = DAYS_OF_WEEK.indexOf(day);
+    const updatedWeeklySchedule = deepCopy(
+      weeklySchedule
+    ) as IWeeklyHabitTemplate;
+    const scheduleDay = updatedWeeklySchedule.days[dayIndex];
+    const toIndex = habitIndex + (direction === HabitMoveDirection.UP ? -1 : 1);
+
+    if (toIndex < 0 || toIndex > scheduleDay.habits.length) {
+      const errorMessage = `Cannot move habit to index ${toIndex}`;
+      console.error(errorMessage);
+      setErrors((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    // Get a copy of the habit that is being moved
+    const habitToMove = scheduleDay.habits[habitIndex];
+
+    // Move the habit to the desired index and get the remove habit
+    const habitToSwapWith = scheduleDay.habits.splice(
+      toIndex,
+      1,
+      habitToMove
+    )[0];
+
+    // Replace the habit being moved with the previously moved one
+    scheduleDay.habits.splice(habitIndex, 1, habitToSwapWith);
+
+    setWeeklySchedule(updatedWeeklySchedule);
+    setEdited(true);
+  };
+
   const calculateTotalValue = (weeklySchedule: IWeeklyHabitTemplate) => {
     let totalValue = 0;
     weeklySchedule.days.forEach((day) => {
@@ -396,6 +434,7 @@ export default function TemplatePage() {
                 copyButtonClicked={handleCopyButtonClick}
                 habitDescriptionChanged={handleDescriptionChange}
                 habitValueChanged={handleValueChange}
+                habitMoveRequested={handleMoveRequest}
               />
             ))}
           </Box>

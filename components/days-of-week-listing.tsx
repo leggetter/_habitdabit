@@ -30,6 +30,19 @@ export type HabitValueChangedEvent = {
 
 export type HabitValueChanged = (event: HabitValueChangedEvent) => void;
 
+export enum HabitMoveDirection {
+  UP,
+  DOWN,
+}
+
+export type HabitMoveEvent = {
+  day: string;
+  habitIndex: number;
+  direction: HabitMoveDirection;
+};
+
+export type HabitMoveRequest = (event: HabitMoveEvent) => void;
+
 export function DayOfWeekListing({
   day,
   habits,
@@ -38,6 +51,7 @@ export function DayOfWeekListing({
   copyButtonClicked,
   habitDescriptionChanged,
   habitValueChanged,
+  habitMoveRequested,
 }: {
   day: string;
   habits: Array<ISingleHabitTemplate>;
@@ -54,6 +68,7 @@ export function DayOfWeekListing({
   ) => void;
   habitDescriptionChanged: HabitDescriptionChanged;
   habitValueChanged: HabitValueChanged;
+  habitMoveRequested: HabitMoveRequest;
 }) {
   return (
     <Box mb={10} width={{ base: "100%", md: 600 }}>
@@ -64,7 +79,7 @@ export function DayOfWeekListing({
       {habits.map((habit, index) => {
         return (
           <HStack
-            key={`${day}_habit_${index}`}
+            key={`${day}_habit_${habit.description}`}
             align="left"
             alignContent="left"
             justifyContent="left"
@@ -126,6 +141,38 @@ export function DayOfWeekListing({
                   >
                     Copy to all
                   </MenuItem>
+                  {index > 0 && (
+                    <MenuItem
+                      title="Move habit up"
+                      onClick={() => {
+                        habitMoveRequested({
+                          day,
+                          habitIndex: index,
+                          direction: HabitMoveDirection.UP,
+                        });
+                      }}
+                      icon={<CopyIcon />}
+                      aria-label={"Move habit up"}
+                    >
+                      Move habit up
+                    </MenuItem>
+                  )}
+                  {index < habits.length - 1 && (
+                    <MenuItem
+                      title="Move habit down"
+                      onClick={() => {
+                        habitMoveRequested({
+                          day,
+                          habitIndex: index,
+                          direction: HabitMoveDirection.DOWN,
+                        });
+                      }}
+                      icon={<CopyIcon />}
+                      aria-label={"Move habit down"}
+                    >
+                      Move habit down
+                    </MenuItem>
+                  )}
                 </MenuList>
               </Menu>
             </Box>

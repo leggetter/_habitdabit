@@ -5,6 +5,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import Layout from "../../../../components/layout";
 import ProjectForm from "../../../../components/projects/project-form";
 import { Project } from "../../../../db/models/project";
@@ -15,15 +16,28 @@ export default function PostPage() {
 
   const { project, error, isLoading } = useProject(router.query.id as string);
 
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (error) {
+      setErrors((prev) => {
+        return [...prev, error];
+      });
+    }
+  }, [error]);
+
   const handleSubmissionComplete = async (project: Project) => {
     // TODO: handle submission problems. Should this be a success callback only?
     await router.push(`/dashboard/projects/${project.id}`);
   };
 
+  const handleSubmissionError = async ({ error }: { error: string }) => {
+    error;
+  };
+
   return (
-    <Layout>
+    <Layout errors={errors}>
       {isLoading && <p>⏲️ Loading...</p>}
-      {error && <p>{error}</p>}
       {!error && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}
@@ -55,6 +69,7 @@ export default function PostPage() {
             action={`/api/v1/projects/${project.id}`}
             project={project}
             onSubmitComplete={handleSubmissionComplete}
+            onSubmitError={handleSubmissionError}
             championReadonly={true}
           />
         </>

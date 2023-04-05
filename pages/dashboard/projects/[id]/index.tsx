@@ -17,6 +17,7 @@ import {
 import { ProjectValues, useProject } from "../../../../lib/project-helpers";
 import EditButton from "../../../../components/projects/edit-button";
 import HDLinkButton from "../../../../components/hd-link-button";
+import { useEffect, useState } from "react";
 
 const ProjectTable = ({ project }: { project: ProjectValues }) => {
   return (
@@ -91,13 +92,26 @@ const ProjectTable = ({ project }: { project: ProjectValues }) => {
 export default function ProjectPage() {
   const router = useRouter();
 
-  const { project, error, isLoading } = useProject(router.query.id as string);
+  const {
+    project,
+    error: projectError,
+    isLoading,
+  } = useProject(router.query.id as string);
+
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (projectError) {
+      setErrors((prev) => {
+        return [...prev, projectError];
+      });
+    }
+  }, [projectError]);
 
   return (
-    <Layout>
+    <Layout errors={errors}>
       {isLoading && <p>⏲️ Loading...</p>}
-      {error && <p>{error}</p>}
-      {!error && !isLoading && !project && (
+      {errors.length === 0 && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}
       <Breadcrumb mb={5}>

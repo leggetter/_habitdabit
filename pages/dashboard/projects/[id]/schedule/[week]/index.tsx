@@ -262,14 +262,7 @@ export default function SchedulePage() {
     : { totalValue: 0, completedValue: 0 };
 
   return (
-    <Layout>
-      {errors.length > 0 && (
-        <Box backgroundColor="red" color="white" p={5} m={10}>
-          {errors.map((e, i) => {
-            return <p key={`error_${i}`}>{e}</p>;
-          })}
-        </Box>
-      )}
+    <Layout errors={errors}>
       {errors.length === 0 && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}

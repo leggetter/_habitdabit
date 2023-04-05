@@ -274,21 +274,14 @@ export default function TemplatePage() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout errors={errors}>
         <p>⏲️ Loading...</p>
       </Layout>
     );
   }
 
   return (
-    <Layout>
-      {errors.length > 0 && (
-        <p>
-          {errors.map((e, index) => {
-            return <p key={`error_${index}`}>{e}</p>;
-          })}
-        </p>
-      )}
+    <Layout errors={errors}>
       {errors.length === 0 && !isLoading && !project && (
         /* TODO: this should be a 404 */ <p>No project found</p>
       )}

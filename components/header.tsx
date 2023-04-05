@@ -27,16 +27,16 @@ export default function Header() {
             <Flex>
               <Box>You are not signed in</Box>
               <Spacer />
-              <a
+              <HDLinkButton
                 href={`/api/auth/signin`}
-                className={styles.buttonPrimary}
+                colorScheme="blue"
                 onClick={(e) => {
                   e.preventDefault();
                   signIn();
                 }}
               >
                 Sign in
-              </a>
+              </HDLinkButton>
             </Flex>
           )}
           {session?.user && (

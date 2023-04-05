@@ -22,6 +22,10 @@ import {
   Input,
   HStack,
   IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import { deepCopy, ProjectValues, useProject } from "lib/project-helpers";
 import {
@@ -36,7 +40,7 @@ import {
   DAYS_OF_WEEK,
   ensureWeekOfHabits,
 } from "lib/habit-helpers";
-import { AddIcon, CopyIcon, MinusIcon } from "@chakra-ui/icons";
+import { AddIcon, CopyIcon, DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
 
 type HabitDescriptionChangedEvent = {
   day: string;
@@ -122,24 +126,36 @@ function DayOfWeekListing({
               />
             </Box>
             <Box>
-              <IconButton
-                title="Remove Habit"
-                onClick={() => {
-                  removeButtonClicked(day, index, habit.description!);
-                }}
-                icon={<MinusIcon />}
-                aria-label={"Remove a habit"}
-              />
-            </Box>
-            <Box>
-              <IconButton
-                title="Copy Habit to all days"
-                onClick={() => {
-                  copyButtonClicked(day, index, habit.description!);
-                }}
-                icon={<CopyIcon />}
-                aria-label={"Copy a habit to all other days"}
-              />
+              <Menu>
+                <MenuButton
+                  as={IconButton}
+                  aria-label="Options"
+                  icon={<HamburgerIcon />}
+                  variant="outline"
+                />
+                <MenuList>
+                  <MenuItem
+                    title="Remove Habit"
+                    onClick={() => {
+                      removeButtonClicked(day, index, habit.description!);
+                    }}
+                    icon={<DeleteIcon />}
+                    aria-label={"Remove a habit"}
+                  >
+                    Delete
+                  </MenuItem>
+                  <MenuItem
+                    title="Copy Habit to all days"
+                    onClick={() => {
+                      copyButtonClicked(day, index, habit.description!);
+                    }}
+                    icon={<CopyIcon />}
+                    aria-label={"Copy a habit to all other days"}
+                  >
+                    Copy to all
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             </Box>
           </HStack>
         );
@@ -333,17 +349,19 @@ export default function TemplatePage() {
     const scheduleDay =
       weeklySchedule.days[DAYS_OF_WEEK.indexOf(editingHabit!.day)];
     const habitIndex = editingHabit!.habitIndex!;
-    const habitToCopy = scheduleDay.habits[habitIndex];
+    const habitToCopy = deepCopy(scheduleDay.habits[habitIndex]);
     for (let dayIndex = 0; dayIndex < weeklySchedule.days.length; ++dayIndex) {
       if (dayIndex === DAYS_OF_WEEK.indexOf(editingHabit!.day)) {
         continue;
       }
 
-      weeklySchedule.days[dayIndex].habits.splice(
-        habitIndex,
-        0,
-        deepCopy(habitToCopy)
-      );
+      if (
+        weeklySchedule.days[dayIndex].habits.length > editingHabit!.habitIndex!
+      ) {
+        weeklySchedule.days[dayIndex].habits.splice(habitIndex, 0, habitToCopy);
+      } else {
+        scheduleDay.habits.push(habitToCopy);
+      }
     }
 
     const updatedWeeklySchedule = deepCopy(weeklySchedule);

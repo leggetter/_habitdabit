@@ -38,12 +38,30 @@ import {
 } from "lib/habit-helpers";
 import { AddIcon, CopyIcon, MinusIcon } from "@chakra-ui/icons";
 
+type HabitDescriptionChangedEvent = {
+  day: string;
+  habitIndex: number;
+  habitDescription: string;
+};
+
+type HabitDescriptionChanged = (event: HabitDescriptionChangedEvent) => void;
+
+type HabitValueChangedEvent = {
+  day: string;
+  habitIndex: number;
+  habitValue: number;
+};
+
+type HabitValueChanged = (event: HabitValueChangedEvent) => void;
+
 function DayOfWeekListing({
   day,
   habits,
   addButtonClicked,
   removeButtonClicked,
   copyButtonClicked,
+  habitDescriptionChanged,
+  habitValueChanged,
 }: {
   day: string;
   habits: Array<ISingleHabitTemplate>;
@@ -58,6 +76,8 @@ function DayOfWeekListing({
     habitIndex: number,
     habitText: string
   ) => void;
+  habitDescriptionChanged: HabitDescriptionChanged;
+  habitValueChanged: HabitValueChanged;
 }) {
   return (
     <Box mb={10} width={{ base: "100%", md: 600 }}>
@@ -76,10 +96,30 @@ function DayOfWeekListing({
             mt={2}
           >
             <Box width={400} mr={5}>
-              {habit.description}
+              <Input
+                type="text"
+                defaultValue={habit.description}
+                onChange={(e) => {
+                  habitDescriptionChanged({
+                    day,
+                    habitIndex: index,
+                    habitDescription: e.target.value,
+                  });
+                }}
+              />
             </Box>
             <Box width={200} pr={5} textAlign="right">
-              {habit.value}
+              <Input
+                type="number"
+                defaultValue={habit.value}
+                onChange={(e) => {
+                  habitValueChanged({
+                    day,
+                    habitIndex: index,
+                    habitValue: Number(e.target.value),
+                  });
+                }}
+              />
             </Box>
             <Box>
               <IconButton
@@ -160,6 +200,23 @@ export default function TemplatePage() {
       setSavingButtonText("Saved");
     }
   }, [saving, edited]);
+
+  const leavePageHandler = () => {
+    return (
+      "You have unsaved changes.\n" +
+      "If you leave the page your changes will be lost.\n" +
+      "Are you sure you wish to leave the page?"
+    );
+  };
+
+  useEffect(() => {
+    if (edited) {
+      window.onbeforeunload = leavePageHandler;
+    }
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [edited]);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -294,6 +351,32 @@ export default function TemplatePage() {
     setEdited(true);
     setShowConfirmDialog(false);
     clearHabitEditing();
+  };
+
+  function handleDescriptionChange({
+    day,
+    habitIndex,
+    habitDescription,
+  }: HabitDescriptionChangedEvent): void {
+    const dayIndex = DAYS_OF_WEEK.indexOf(day);
+    const scheduleDay = weeklySchedule.days[dayIndex];
+    scheduleDay.habits[habitIndex].description = habitDescription;
+    const updatedWeeklySchedule = deepCopy(weeklySchedule);
+    setWeeklySchedule(updatedWeeklySchedule);
+    setEdited(true);
+  }
+
+  const handleValueChange = ({
+    day,
+    habitIndex,
+    habitValue,
+  }: HabitValueChangedEvent) => {
+    const dayIndex = DAYS_OF_WEEK.indexOf(day);
+    const scheduleDay = weeklySchedule.days[dayIndex];
+    scheduleDay.habits[habitIndex].value = habitValue;
+    const updatedWeeklySchedule = deepCopy(weeklySchedule);
+    setWeeklySchedule(updatedWeeklySchedule);
+    setEdited(true);
   };
 
   const calculateTotalValue = (weeklySchedule: IWeeklyHabitTemplate) => {
@@ -431,6 +514,8 @@ export default function TemplatePage() {
                 addButtonClicked={handleAddButtonClick}
                 removeButtonClicked={handleRemoveButtonClick}
                 copyButtonClicked={handleCopyButtonClick}
+                habitDescriptionChanged={handleDescriptionChange}
+                habitValueChanged={handleValueChange}
               />
             ))}
           </Box>

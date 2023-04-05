@@ -7,7 +7,9 @@ import theme from "../lib/theme";
 export default function Document() {
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        <link rel="shortcut icon" href="/static/favicon.ico" />
+      </Head>
       <body>
         <ColorModeScript initialColorMode={theme.config.initialColorMode} />
         <Main />

@@ -1,4 +1,4 @@
-import { extendTheme } from '@chakra-ui/react'
+import { extendTheme } from "@chakra-ui/react";
 
 const theme = extendTheme({
   styles: {
@@ -12,8 +12,14 @@ const theme = extendTheme({
       h3: {
         marginBottom: 2,
       },
-    }
-  }
-})
+      p: {
+        marginBottom: 2,
+      },
+      a: {
+        color: "green.500",
+      },
+    },
+  },
+});
 
-export default theme
+export default theme;

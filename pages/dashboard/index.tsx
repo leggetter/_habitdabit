@@ -81,7 +81,7 @@ const ProjectsList = ({
 }) => {
   return (
     <>
-      <SimpleGrid columns={{ m: 2, l: 3 }} spacing={5}>
+      <SimpleGrid columns={{ sm: 1, md: 2, lg: 3 }} spacing={5}>
         {projects.map((project) => {
           return (
             <ProjectCard

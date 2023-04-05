@@ -20,19 +20,9 @@ import {
   FormControl,
   FormLabel,
   Input,
-  HStack,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
 } from "@chakra-ui/react";
 import { deepCopy, ProjectValues, useProject } from "lib/project-helpers";
-import {
-  ISingleHabitTemplate,
-  IWeeklyHabitTemplate,
-  Project,
-} from "db/models/project";
+import { IWeeklyHabitTemplate, Project } from "db/models/project";
 import React, { useEffect, useState } from "react";
 import { ConfirmDialog } from "components/confirm-dialog";
 import {
@@ -40,139 +30,11 @@ import {
   DAYS_OF_WEEK,
   ensureWeekOfHabits,
 } from "lib/habit-helpers";
-import { AddIcon, CopyIcon, DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
-
-type HabitDescriptionChangedEvent = {
-  day: string;
-  habitIndex: number;
-  habitDescription: string;
-};
-
-type HabitDescriptionChanged = (event: HabitDescriptionChangedEvent) => void;
-
-type HabitValueChangedEvent = {
-  day: string;
-  habitIndex: number;
-  habitValue: number;
-};
-
-type HabitValueChanged = (event: HabitValueChangedEvent) => void;
-
-function DayOfWeekListing({
-  day,
-  habits,
-  addButtonClicked,
-  removeButtonClicked,
-  copyButtonClicked,
-  habitDescriptionChanged,
-  habitValueChanged,
-}: {
-  day: string;
-  habits: Array<ISingleHabitTemplate>;
-  addButtonClicked: (day: string) => void;
-  removeButtonClicked: (
-    day: string,
-    habitIndex: number,
-    habitText: string
-  ) => void;
-  copyButtonClicked: (
-    day: string,
-    habitIndex: number,
-    habitText: string
-  ) => void;
-  habitDescriptionChanged: HabitDescriptionChanged;
-  habitValueChanged: HabitValueChanged;
-}) {
-  return (
-    <Box mb={10} width={{ base: "100%", md: 600 }}>
-      <Heading as="h3" size="lg">
-        {day}
-      </Heading>
-      {habits.length === 0 && <Box>No habits defined for {day}</Box>}
-      {habits.map((habit, index) => {
-        return (
-          <HStack
-            key={`${day}_habit_${index}`}
-            align="left"
-            alignContent="left"
-            justifyContent="left"
-            alignItems="center"
-            mt={2}
-          >
-            <Box width={400} mr={5}>
-              <Input
-                type="text"
-                defaultValue={habit.description}
-                onChange={(e) => {
-                  habitDescriptionChanged({
-                    day,
-                    habitIndex: index,
-                    habitDescription: e.target.value,
-                  });
-                }}
-              />
-            </Box>
-            <Box width={200} pr={5} textAlign="right">
-              <Input
-                type="number"
-                defaultValue={habit.value}
-                onChange={(e) => {
-                  habitValueChanged({
-                    day,
-                    habitIndex: index,
-                    habitValue: Number(e.target.value),
-                  });
-                }}
-              />
-            </Box>
-            <Box>
-              <Menu>
-                <MenuButton
-                  as={IconButton}
-                  aria-label="Options"
-                  icon={<HamburgerIcon />}
-                  variant="outline"
-                />
-                <MenuList>
-                  <MenuItem
-                    title="Remove Habit"
-                    onClick={() => {
-                      removeButtonClicked(day, index, habit.description!);
-                    }}
-                    icon={<DeleteIcon />}
-                    aria-label={"Remove a habit"}
-                  >
-                    Delete
-                  </MenuItem>
-                  <MenuItem
-                    title="Copy Habit to all days"
-                    onClick={() => {
-                      copyButtonClicked(day, index, habit.description!);
-                    }}
-                    icon={<CopyIcon />}
-                    aria-label={"Copy a habit to all other days"}
-                  >
-                    Copy to all
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            </Box>
-          </HStack>
-        );
-      })}
-      <Box width={{ base: "100%", md: "600px" }} mt={2} textAlign="right">
-        <IconButton
-          title="Add new habit"
-          onClick={() => {
-            addButtonClicked(day);
-          }}
-          icon={<AddIcon />}
-          aria-label={"add a new habit"}
-        />
-      </Box>
-    </Box>
-  );
-}
+import {
+  HabitDescriptionChangedEvent,
+  HabitValueChangedEvent,
+  DayOfWeekListing,
+} from "components/days-of-week-listing";
 
 export default function TemplatePage() {
   const router = useRouter();

@@ -21,6 +21,7 @@ import {
   FormLabel,
   Input,
   HStack,
+  IconButton,
 } from "@chakra-ui/react";
 import { deepCopy, ProjectValues, useProject } from "lib/project-helpers";
 import {
@@ -35,17 +36,24 @@ import {
   DAYS_OF_WEEK,
   ensureWeekOfHabits,
 } from "lib/habit-helpers";
+import { AddIcon, CopyIcon, MinusIcon } from "@chakra-ui/icons";
 
 function DayOfWeekListing({
   day,
   habits,
   addButtonClicked,
   removeButtonClicked,
+  copyButtonClicked,
 }: {
   day: string;
   habits: Array<ISingleHabitTemplate>;
   addButtonClicked: (day: string) => void;
   removeButtonClicked: (
+    day: string,
+    habitIndex: number,
+    habitText: string
+  ) => void;
+  copyButtonClicked: (
     day: string,
     habitIndex: number,
     habitText: string
@@ -74,27 +82,37 @@ function DayOfWeekListing({
               {habit.value}
             </Box>
             <Box>
-              <Button
+              <IconButton
                 title="Remove Habit"
                 onClick={() => {
                   removeButtonClicked(day, index, habit.description!);
                 }}
-              >
-                -
-              </Button>
+                icon={<MinusIcon />}
+                aria-label={"Remove a habit"}
+              />
+            </Box>
+            <Box>
+              <IconButton
+                title="Copy Habit to all days"
+                onClick={() => {
+                  copyButtonClicked(day, index, habit.description!);
+                }}
+                icon={<CopyIcon />}
+                aria-label={"Copy a habit to all other days"}
+              />
             </Box>
           </HStack>
         );
       })}
       <Box width={{ base: "100%", md: "600px" }} mt={2} textAlign="right">
-        <Button
+        <IconButton
           title="Add new habit"
           onClick={() => {
             addButtonClicked(day);
           }}
-        >
-          +
-        </Button>
+          icon={<AddIcon />}
+          aria-label={"add a new habit"}
+        />
       </Box>
     </Box>
   );
@@ -174,6 +192,19 @@ export default function TemplatePage() {
     setConfirmDialogAction("DELETE_HABIT");
   };
 
+  const handleCopyButtonClick = (
+    day: string,
+    habitIndex: number,
+    habitText: string
+  ) => {
+    setEditingHabit({ day, habitIndex });
+    setConfirmDialogText(
+      `Are you sure you want to copy the habit "${habitText}" to all days`
+    );
+    setShowConfirmDialog(true);
+    setConfirmDialogAction("COPY_HABIT");
+  };
+
   const handleConfirm = (action: string) => {
     switch (action) {
       case "CANCEL_CREATE_HABIT":
@@ -181,6 +212,9 @@ export default function TemplatePage() {
         break;
       case "DELETE_HABIT":
         handleHabitDelete();
+        break;
+      case "COPY_HABIT":
+        handleHabitCopy();
         break;
     }
   };
@@ -230,6 +264,30 @@ export default function TemplatePage() {
     const dayIndex = DAYS_OF_WEEK.indexOf(editingHabit!.day);
     const scheduleDay = weeklySchedule.days[dayIndex];
     scheduleDay.habits.splice(editingHabit?.habitIndex!, 1);
+
+    const updatedWeeklySchedule = deepCopy(weeklySchedule);
+    setWeeklySchedule(updatedWeeklySchedule);
+    setEdited(true);
+    setShowConfirmDialog(false);
+    clearHabitEditing();
+  };
+
+  const handleHabitCopy = () => {
+    const scheduleDay =
+      weeklySchedule.days[DAYS_OF_WEEK.indexOf(editingHabit!.day)];
+    const habitIndex = editingHabit!.habitIndex!;
+    const habitToCopy = scheduleDay.habits[habitIndex];
+    for (let dayIndex = 0; dayIndex < weeklySchedule.days.length; ++dayIndex) {
+      if (dayIndex === DAYS_OF_WEEK.indexOf(editingHabit!.day)) {
+        continue;
+      }
+
+      weeklySchedule.days[dayIndex].habits.splice(
+        habitIndex,
+        0,
+        deepCopy(habitToCopy)
+      );
+    }
 
     const updatedWeeklySchedule = deepCopy(weeklySchedule);
     setWeeklySchedule(updatedWeeklySchedule);
@@ -372,6 +430,7 @@ export default function TemplatePage() {
                 habits={weeklySchedule.days[index].habits}
                 addButtonClicked={handleAddButtonClick}
                 removeButtonClicked={handleRemoveButtonClick}
+                copyButtonClicked={handleCopyButtonClick}
               />
             ))}
           </Box>

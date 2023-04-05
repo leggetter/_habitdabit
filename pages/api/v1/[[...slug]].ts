@@ -78,11 +78,11 @@ router
             .json({ error: `A project with id "${id}" could not be found.` });
         } else {
           const session = await getServerSession(req, res, authOptions);
-          const owner = await users.findOne({
-            filter: { id: project.ownerId },
+          const loggedInUser = await users.findOne({
+            filter: { email: session?.user.email },
           });
 
-          if (owner?.email !== session?.user.email) {
+          if (project.adminIds.includes(loggedInUser!.id!) === false) {
             res.status(403).json({
               error:
                 "The logged in user does not have permission to edit the project",

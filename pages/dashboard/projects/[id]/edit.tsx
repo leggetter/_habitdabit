@@ -32,7 +32,9 @@ export default function PostPage() {
   };
 
   const handleSubmissionError = async ({ error }: { error: string }) => {
-    error;
+    setErrors((prev) => {
+      return [...prev, error];
+    });
   };
 
   return (

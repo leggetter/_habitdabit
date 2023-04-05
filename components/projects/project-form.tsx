@@ -19,6 +19,7 @@ interface ProjectFormProps {
   method: "POST" | "PATCH";
   project?: ProjectValues;
   onSubmitComplete: (project: Project) => Promise<void>;
+  onSubmitError: (error: { error: string }) => Promise<void>;
   championReadonly?: boolean;
 }
 
@@ -85,6 +86,7 @@ export default function ProjectForm({
   method,
   project,
   onSubmitComplete,
+  onSubmitError,
   championReadonly = false,
 }: ProjectFormProps) {
   const _projectValues = new ProjectValues(project);
@@ -133,8 +135,13 @@ export default function ProjectForm({
 
             try {
               const response = await fetch(action, params);
-              const body = (await response.json()) as Project;
-              await onSubmitComplete(body);
+              if (response.status === 200) {
+                const body = (await response.json()) as Project;
+                await onSubmitComplete(body);
+              } else {
+                const error = (await response.json()) as { error: string };
+                await onSubmitError(error);
+              }
               setSubmitting(false);
             } catch (err) {
               // TODO: have some form-level errors

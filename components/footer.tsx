@@ -10,9 +10,9 @@ export default function Footer() {
         <li className={styles.navItem}>
           <a href="https://github.com/leggetter/habitdabit">GitHub</a>
         </li>
-        <li className={styles.navItem}>
+        {/* <li className={styles.navItem}>
           <Link href="/policy">Policy</Link>
-        </li>
+        </li> */}
       </ul>
     </footer>
   );

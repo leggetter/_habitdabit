@@ -135,7 +135,7 @@ export default function ProjectForm({
 
             try {
               const response = await fetch(action, params);
-              if (response.status === 200) {
+              if (response.status >= 200 && response.status < 300) {
                 const body = (await response.json()) as Project;
                 await onSubmitComplete(body);
               } else {

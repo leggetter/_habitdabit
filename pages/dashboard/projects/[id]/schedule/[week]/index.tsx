@@ -340,7 +340,10 @@ export default function SchedulePage() {
               ))}
             </Box>
             <Box mb={5}>Total potential value: {totalValue}</Box>
-            <Box mb={5}>Total completed value: {completedValue}</Box>
+            <Box mb={5}>
+              Total completed value: {completedValue} (
+              {Math.round((completedValue / totalValue) * 100)}%)
+            </Box>
             <Box>
               <Button colorScheme="red" onClick={resetSchedule}>
                 Reset schedule

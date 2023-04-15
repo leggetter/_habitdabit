@@ -13,7 +13,7 @@ export default function ForwarderPage() {
   useEffect(() => {
     const today = new Date();
     // Move to Monday
-    today.setDate(today.getDate() - today.getDay());
+    today.setDate(today.getDate() - today.getDay() + 1);
     const path = `${router.asPath}/${toWeekUrlFormat(today)}`;
     router.push(path);
   }, [router]);

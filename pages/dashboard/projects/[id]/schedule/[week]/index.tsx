@@ -191,7 +191,6 @@ export default function SchedulePage() {
   const [weekNav, setWeekNav] = useState<WeekNav | null>(null);
 
   useEffect(() => {
-    console.log(week);
     if (week && toWeekUrlFormat(week) !== weekNav?.thisWeek) {
       const newWeekNav = {
         prevWeek: "",
@@ -211,8 +210,6 @@ export default function SchedulePage() {
       newWeekNav.nextWeek = toWeekUrlFormat(nextWeekDate);
 
       setWeekNav(newWeekNav);
-
-      console.log(newWeekNav);
     }
   }, [weekNav, week]);
 

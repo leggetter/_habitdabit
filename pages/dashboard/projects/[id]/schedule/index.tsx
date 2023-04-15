@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import Layout from "components/layout";
 import { useEffect } from "react";
+import { toWeekUrlFormat } from "lib/project-helpers";
 
 export default function ForwarderPage() {
   const router = useRouter();
@@ -13,9 +14,7 @@ export default function ForwarderPage() {
     const today = new Date();
     // Move to Monday
     today.setDate(today.getDate() - today.getDay());
-    const path = `${router.asPath}/${today.getFullYear()}-${pad(
-      today.getMonth() + 1
-    )}-${pad(today.getDate() + 1)}`;
+    const path = `${router.asPath}/${toWeekUrlFormat(today)}`;
     router.push(path);
   }, [router]);
 

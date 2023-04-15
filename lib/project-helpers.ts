@@ -91,6 +91,18 @@ export function useProject(id: string) {
   return { project, error, isLoading };
 }
 
+const pad = (value: number) => {
+  return value.toString().padStart(2, "0");
+};
+
+export function toWeekUrlFormat(date: Date): string {
+  const format = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}`;
+
+  return format;
+}
+
 export const deepCopy = (obj: any) => {
   return JSON.parse(JSON.stringify(obj));
 };

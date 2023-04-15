@@ -1,5 +1,10 @@
 import { useRouter } from "next/router";
-import { deepCopy, ProjectValues, useProject } from "lib/project-helpers";
+import {
+  deepCopy,
+  ProjectValues,
+  toWeekUrlFormat,
+  useProject,
+} from "lib/project-helpers";
 import Layout from "components/layout";
 import { useEffect, useState } from "react";
 import {
@@ -9,6 +14,7 @@ import {
   BreadcrumbLink,
   Button,
   Checkbox,
+  Flex,
   Heading,
   HStack,
   Text,
@@ -25,6 +31,8 @@ import {
   Project,
 } from "db/models/project";
 import { useSession } from "next-auth/react";
+import { ArrowLeftIcon, ArrowRightIcon } from "@chakra-ui/icons";
+import Link from "next/link";
 
 const calculateTotalValue = (weeklySchedule: IWeeklyHabitSchedule) => {
   let totalValue = 0;
@@ -126,6 +134,12 @@ const findWeeklySchedule = (
   return currentWeek;
 };
 
+type WeekNav = {
+  prevWeek: string;
+  thisWeek: string;
+  nextWeek: string;
+};
+
 export default function SchedulePage() {
   const router = useRouter();
   const {
@@ -146,7 +160,7 @@ export default function SchedulePage() {
       const weekBeginning = new Date(router.query.week as string);
       setWeek(weekBeginning);
     }
-  }, [router]);
+  }, [router.query.week]);
 
   useEffect(() => {
     if (week && project) {
@@ -173,6 +187,34 @@ export default function SchedulePage() {
       }
     }
   }, [project, week]);
+
+  const [weekNav, setWeekNav] = useState<WeekNav | null>(null);
+
+  useEffect(() => {
+    console.log(week);
+    if (week && toWeekUrlFormat(week) !== weekNav?.thisWeek) {
+      const newWeekNav = {
+        prevWeek: "",
+        thisWeek: "",
+        nextWeek: "",
+      };
+
+      const thisWeekDate = week;
+      newWeekNav.thisWeek = toWeekUrlFormat(thisWeekDate);
+
+      const prevWeekDate = new Date(thisWeekDate);
+      prevWeekDate.setDate(prevWeekDate.getDate() - 7);
+      newWeekNav.prevWeek = toWeekUrlFormat(prevWeekDate);
+
+      const nextWeekDate = new Date(thisWeekDate);
+      nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+      newWeekNav.nextWeek = toWeekUrlFormat(nextWeekDate);
+
+      setWeekNav(newWeekNav);
+
+      console.log(newWeekNav);
+    }
+  }, [weekNav, week]);
 
   const saveWeeklySchedules = async (
     weeklySchedules: IWeeklyHabitSchedule[]
@@ -296,6 +338,29 @@ export default function SchedulePage() {
           </BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
+
+      {weekNav !== null && (
+        <Flex flexDirection="row" justifyContent="space-between" mb={5}>
+          <Box>
+            <Link
+              href={`/dashboard/projects/${project?.id}/schedule/${weekNav.prevWeek}`}
+            >
+              <ArrowLeftIcon />
+              &nbsp;{weekNav.prevWeek}
+            </Link>
+          </Box>
+          <Box>{weekNav.thisWeek}</Box>
+          <Box>
+            <Link
+              href={`/dashboard/projects/${project?.id}/schedule/${weekNav.nextWeek}`}
+            >
+              {weekNav.nextWeek}
+              &nbsp;
+              <ArrowRightIcon />
+            </Link>
+          </Box>
+        </Flex>
+      )}
 
       <Box as="section" mt={10}>
         <Heading as="h1">

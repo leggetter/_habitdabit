@@ -75,7 +75,7 @@ class WeeklyHabitSchedule implements IWeeklyHabitSchedule {
 @TigrisCollection("projects")
 export class Project {
   @PrimaryKey(TigrisDataTypes.INT32, { order: 1, autoGenerate: true })
-  id?: number;
+  id?: number | string;
 
   @Field()
   name!: string;
@@ -84,13 +84,13 @@ export class Project {
   goalDescription!: string;
 
   @Field(TigrisDataTypes.INT32)
-  ownerId!: number;
+  ownerId!: number | string;
 
   @Field(TigrisDataTypes.ARRAY, { elements: TigrisDataTypes.INT32 })
-  adminIds!: Array<number>;
+  adminIds!: Array<number> | Array<string>;
 
   @Field(TigrisDataTypes.INT32)
-  championId!: number;
+  championId!: number | string;
 
   @Field(TigrisDataTypes.DATE_TIME, { timestamp: "createdAt" })
   createdAt?: Date;

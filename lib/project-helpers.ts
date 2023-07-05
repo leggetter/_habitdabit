@@ -7,12 +7,12 @@ import {
 } from "../db/models/project";
 
 export class ProjectValues {
-  public id?: number;
+  public id?: number | string;
   public name: string | undefined;
   public goal: string | undefined;
   public owner: string | undefined;
   public champion: string | undefined;
-  public adminEmails: string[] | undefined;
+  public adminEmails: string[] | number[] | undefined;
   public habitsScheduleTemplate: IWeeklyHabitTemplate | undefined;
   public weeklySchedules: IWeeklyHabitSchedule[] | undefined;
 

@@ -1,0 +1,6 @@
+{
+  "databaseURL": "https://Phil-Leggetter-s-workspace-hc84d7.eu-west-1.xata.sh/db/habit-dabit",
+  "codegen": {
+    "output": "db/xata.ts"
+  }
+}

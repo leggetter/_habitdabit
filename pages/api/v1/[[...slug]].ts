@@ -5,7 +5,7 @@ import { createRouter } from "next-connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { tigrisDb } from "../../../lib/tigris";
-import { Project } from "../../../db/models/project";
+import { IWeeklyHabitTemplate, Project } from "../../../db/models/project";
 import { User } from "../../../db/models/user";
 import { ProjectValues } from "../../../lib/project-helpers";
 import {
@@ -16,6 +16,9 @@ import {
   UpdateQuery,
 } from "@tigrisdata/core";
 
+import { getXataClient } from "db/xata";
+const xata = getXataClient();
+
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
 const router = createRouter<
@@ -25,6 +28,18 @@ const router = createRouter<
 
 const projects = tigrisDb.getCollection<Project>(Project);
 const users = tigrisDb.getCollection<User>(User);
+
+const toWeeklyHabitTemplate = (
+  json: string | undefined | null
+): IWeeklyHabitTemplate => {
+  if (!json) {
+    return {
+      days: [],
+    };
+  } else {
+    return JSON.parse(json) as IWeeklyHabitTemplate;
+  }
+};
 
 router
   .use(async (req, res, next) => {
@@ -57,8 +72,41 @@ router
           });
           return res.status(200).json(projectResults);
         } else {
-          const cursor = projects.findMany();
-          return res.status(200).json(await cursor.toArray());
+          const records = await xata.db.projects
+            .select([
+              "id",
+              "name",
+              "goalDescription",
+              "adminIds",
+              "startDate",
+              "habitScheduleTemplate",
+              "owner.id",
+              "owner.name",
+              "owner.email",
+              "champion.id",
+              "champion.name",
+              "champion.email",
+            ])
+            .getAll();
+
+          const result: Project[] = records.map((result) => {
+            return {
+              id: result.id,
+              name: result.name || "",
+              goalDescription: result.goalDescription || "",
+              ownerId: result.owner && result.owner.id ? result.owner.id : "",
+              championId: result.champion?.id || "",
+              startDate: result.startDate,
+              habitsScheduleTemplate: toWeeklyHabitTemplate(
+                result.habitScheduleTemplate
+              ),
+              adminIds: result.adminIds || [],
+            };
+          });
+
+          // const cursor = projects.findMany();
+          // return res.status(200).json(await cursor.toArray());
+          return res.status(200).json(result);
         }
       } catch (e: any) {
         return res.status(500).json({ error: e.toString() });
@@ -191,48 +239,43 @@ router
 
       try {
         const id = req.params!.id;
-
-        const projects = tigrisDb.getCollection<Project>(Project);
-        const project = await projects.findOne({ filter: { id } });
-
-        if (project) {
-          const projectValues = new ProjectValues({
-            id: project.id,
-            goal: project.goalDescription,
-            name: project.name,
-          });
-
-          const usersCollection = tigrisDb.getCollection<User>(User);
-          const query: FindQuery<User> = {
-            filter: {
-              op: LogicalOperator.OR,
-              selectorFilters: [
-                { id: project.ownerId },
-                { id: project.championId },
-                ...project.adminIds.map((id) => {
-                  return { id };
-                }),
-              ],
+        const record = await xata.db.projects.read(id.toString());
+        const admins = await xata.db.users
+          .select(["email"])
+          .filter({
+            id: {
+              $any: record?.adminIds ? record?.adminIds : [],
             },
-          };
+          })
+          .getAll();
 
-          const usersCursor = usersCollection.findMany(query);
-          const users = await usersCursor.toArray();
-          projectValues.champion = users.find(
-            (u) => u.id === project.championId
-          )!.email;
-          projectValues.owner = users.find(
-            (u) => u.id === project.ownerId
-          )!.email;
-          projectValues.adminEmails = [
-            ...new Set(
-              users
-                .filter((u) => project.adminIds.includes(u.id!))
-                .map((u) => u.email)
+        if (record) {
+          const weeklySchedules = await xata.db.weeklyHabitSchedules
+            .select(["id", "weekStartDate", "days"])
+            .filter({ "project.id": record.id })
+            .getAll();
+
+          const champion = await record.champion?.read();
+          const owner = await record.owner?.read();
+          const projectValues = new ProjectValues({
+            id: record.id,
+            goal: record.goalDescription || "",
+            name: record.name || "",
+            adminEmails: admins.length
+              ? admins.map((admin) => admin.email || "")
+              : [],
+            champion: champion?.email || "",
+            habitsScheduleTemplate: toWeeklyHabitTemplate(
+              record.habitScheduleTemplate
             ),
-          ];
-          projectValues.habitsScheduleTemplate = project.habitsScheduleTemplate;
-          projectValues.weeklySchedules = project.weeklyHabitSchedules;
+            owner: owner?.email || "",
+            weeklySchedules: weeklySchedules.map((schedule) => {
+              return {
+                days: schedule.days ? JSON.parse(schedule.days) : [],
+                weekStartDate: schedule.weekStartDate || new Date(),
+              };
+            }),
+          });
 
           res.status(200).json(projectValues);
         } else {
